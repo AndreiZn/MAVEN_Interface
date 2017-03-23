@@ -106,8 +106,13 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     
     % Update handles structure
     guidata(hObject, handles);
-    % UIWAIT makes Interface wait for user response (see UIRESUME)
-    % uiwait(handles.figure1);
+    
+    %delete files of *.asv type
+    cd('./Scripts')
+    delete *.asv
+    cd ('./Arguments')
+    delete *.asv
+    cd ('../../')
     
     %To save handles of objects that appear when working with arguments of
     %functions
@@ -675,7 +680,7 @@ function Sysmessage(line)
     str = get(findobj('Tag', 'Sysmessage'), 'String');
     time = [datestr(datetime('now'), 'HH:MM:SS'), ':> '];
     if (isempty(str))
-        str = [time, line];
+        str = char([time, line]);
     else        
         str = char({str, [time, line]});
     end
