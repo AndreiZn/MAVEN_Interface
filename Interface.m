@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 22-Mar-2017 10:19:01
+    % Last Modified by GUIDE v2.5 28-Mar-2017 19:20:00
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1; 
@@ -70,10 +70,6 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.dragging = [];
     handles.orPos = [];
     
-    %Call and fill out the edit1 and edit2
-    %edit1_Callback(findobj('Tag', 'edit1'), eventdata, handles);
-    %edit2_Callback(findobj('Tag', 'edit2'), eventdata, handles);
-    
     %Mass handle:
     handles.masstype = 1; 
     %Masstypes: 1 - 1a.u. 
@@ -96,6 +92,12 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     % This line is sent to Sysmessages when a user didn't choose a folder
     % with files
     handles.Sysmesnofiles = ('The folder with files was not chosen');
+    
+    % handles of all axes available
+    handles.axesav = {handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.axes5};
+    
+    %sum of heights of available axes
+    handles.panelheight = height_of_axes(handles.axesav);
     
     %This is for MassSpectrum
     handles.timecorrectness = 0; % = 1 if massspectime has the following format: 'HH:MM:SS' 
@@ -730,18 +732,31 @@ function newwindowbutton_Callback(hObject, eventdata, handles)
     Interface
 end
 
+%function returns sum of heights of axes
+function [res] = height_of_axes(axes)
+    res = 0;
+    for ind_hoa=1:size(axes, 2)
+        pos = get (axes{ind_hoa}, 'Position');
+        h = pos(4);
+        res = res + h;
+    end
+end
 
 % --- Executes on slider movement.
 function slider4_Callback(hObject, eventdata, handles)
     %set(handles.slider4, 'SliderStep', [0.1,0.1]); 
     %Get slider's position 
     sl_pos = get(hObject, 'Value'); 
-    %Get uipanel1 position  (to be moved)
+    %Get uipanel8 position  (to be moved)
     panel_pos = get(handles.uipanel8, 'Position'); 
-    %Get uipanel2 position
+    %Get uipanel7 position
     fig_pos = get(handles.uipanel7, 'Position'); 
+     
+    %Get sum of heights of available axes
+    %handles.panelheight = height_of_axes(handles.axesav);
     %Set uipanel1 new position 
-    set(handles.uipanel8, 'Position', [panel_pos(1), 0, panel_pos(3), panel_pos(4)]);
+    set(handles.uipanel8, 'Position', [panel_pos(1), fig_pos(4)*sl_pos, panel_pos(3), panel_pos(4)]);
+    guidata(hObject, handles);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -757,4 +772,59 @@ end
 
 % --- Executes during object creation, after setting all properties.
 function pushbutton6_CreateFcn(hObject, eventdata, handles)
+end
+
+% Find the lowest axes
+function [ha] = highest_axes(axs)
+    if (~isempty(axs))
+        pos = get (axs{1}, 'Position');
+        max_y = pos(2);
+        ha = axs{1};
+        for ind_ha=2:size(axs, 2)
+            pos = get (axs{ind_ha}, 'Position');
+            if (pos(2)>max_y)
+                max_y = pos(2);
+                ha = axs{ind_ha};
+            end    
+        end
+    else
+        % to complete
+    end    
+end
+
+% --- Executes on button press in NewAxes.
+function NewAxes_Callback(hObject, eventdata, handles)    
+    panel_pos = get(handles.uipanel8, 'Position'); 
+    fig_pos = get(handles.uipanel7, 'Position');
+    
+    % find the highest axes from currently available ones
+    h_ax = highest_axes(handles.axesav);
+    highest_pos = get(h_ax, 'Position'); % its position
+    
+    %space for new axes = y-size of the highestaxes:
+    delta_y = highest_pos(4);
+    
+    % Change the size and position of panels with axes
+    fig_pos(4) = fig_pos(4) + delta_y;
+    fig_pos(2) = fig_pos(2) - delta_y;
+    panel_pos(4) = panel_pos(4) + delta_y;
+    
+    set (handles.uipanel7, 'Position', fig_pos)
+    set (handles.uipanel8, 'Position', panel_pos)
+    
+    % find the highest axes from currently available ones
+    h_ax = highest_axes(handles.axesav);
+    highest_pos = get(h_ax, 'Position'); % its position
+    
+    numofax = size(handles.axesav, 2); %number of axes available
+    tag = ['axes', num2str(numofax+1)];
+    new_ax_pos = highest_pos;
+    assignin ('base', 'ha', h_ax); 
+    new_ax_pos(2) = new_ax_pos(2) + delta_y;
+    %axes(handles.uipanel8, 'Units', 'characters', 'ActivePositionProperty', 'position', 'Position', new_ax_pos);
+    handles.(tag) = axes(handles.uipanel8, 'Units', 'characters', 'ActivePositionProperty', 'position', 'Position', new_ax_pos);
+        
+    handles.axesav{numofax + 1} = handles.(tag); 
+    
+    guidata(hObject, handles);
 end
