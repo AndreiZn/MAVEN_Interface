@@ -93,6 +93,10 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     %To save all information about plotted graphs and spectrograms
     handles.currentgraphs = struct('Script', {''}, 'Axes', handles.currentaxes, 'Args', handles.Args);
     
+    % This line is sent to Sysmessages when a user didn't choose a folder
+    % with files
+    handles.Sysmesnofiles = ('The folder with files was not chosen');
+    
     %This is for MassSpectrum
     handles.timecorrectness = 0; % = 1 if massspectime has the following format: 'HH:MM:SS' 
     handles.massspcparam = 0; %linear scale for the mass spectrum 
@@ -121,7 +125,8 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     %Opening a folder with all files. If you don't add guidata here,
     %Interface will display an error when moving a mouse.
     handles.filefolderpath = uigetdir('', 'Choose a folder with files');
-    if (~isempty(handles.filefolderpath))
+    assignin('base', 'num', handles.filefolderpath)
+    if (~isequal(handles.filefolderpath, 0))
         handles.filefolderchosen = 1;
         Sysmessage(['The folder "', handles.filefolderpath, '" was chosen'])
     else
@@ -147,11 +152,6 @@ end
 
 % --- Executes during object creation, after setting all properties.
 function axes1_CreateFcn(hObject, eventdata, handles)
-    % hObject    handle to axes1 (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    empty - handles not created until after all CreateFcns called
-
-    % Hint: place code in OpeningFcn to populate axes1
 end
 
 % --- Executes on button press in pushbutton1.
@@ -418,88 +418,93 @@ function listbox2_Callback(hObject, eventdata, handles)
     handles.Args = feval ([contents{get(hObject,'Value')}, '_Args']); %Args has all information about arguments of the function "contents{get(hObject,'Value')}"
     cd ('../../') %get back to the main folder
     
-    fieldnms = fieldnames (handles.Args);
-    for i = 1:size(fieldnms, 1)
-        
-        field_i = fieldnms(i); %field_i is a cell 1x1
-        field_i = field_i{1}; %field_i becomes a string
-        args_i = handles.Args.(field_i); %get all args from the i-field
+    if (handles.filefolderchosen == 1)
+    
+        fieldnms = fieldnames (handles.Args);
+        for i = 1:size(fieldnms, 1)
 
-        str = cell(1, size(args_i, 1)); %preliminary creation of the str, which is described below  
-        for j = 1:size(args_i,1)
-            str(j) = args_i{j}(1); %str will collect all names of arguments. 
-                                   %That's what we see in a new listbox. For example, for Args.mass str contains of 'H+', 'He+', 'O+' and so on.   
-        end
+            field_i = fieldnms(i); %field_i is a cell 1x1
+            field_i = field_i{1}; %field_i becomes a string
+            args_i = handles.Args.(field_i); %get all args from the i-field
 
-        %panel which is used only to display a name of an argument
-        panelname = field_i; %name of a new panel
-        handles.argpanel(i) = uipanel ('Title',panelname,'FontSize',11,...
-                  'BackgroundColor','white',...
-                  'Position',[.856 (.812-.102*i) .10 .09]);
+            str = cell(1, size(args_i, 1)); %preliminary creation of the str, which is described below  
+            for j = 1:size(args_i,1)
+                str(j) = args_i{j}(1); %str will collect all names of arguments. 
+                                       %That's what we see in a new listbox. For example, for Args.mass str contains of 'H+', 'He+', 'O+' and so on.   
+            end
 
-        %list of arguments      
-        handles.lst_with_args(i) = uicontrol('Style','listbox','FontSize', 9,... 
-                  'Position',[1180 (600-75*i) 136 50],...
-                  'String',str); 
+            %panel which is used only to display a name of an argument
+            panelname = field_i; %name of a new panel
+            handles.argpanel(i) = uipanel ('Title',panelname,'FontSize',11,...
+                      'BackgroundColor','white',...
+                      'Position',[.856 (.812-.102*i) .10 .09]);
 
-        %it's necessary to save all objects created to delete them later. 
-        %This information is saved in handles.argobj      
-        handles.temphndl = [handles.argpanel(i), handles.lst_with_args(i)];
-        handles.argobj = [handles.argobj, handles.temphndl];       
-        
-        if (isequal(field_i, 'file'))
-            
-            filetype = args_i{1}(1); % because that's how the file-wise part of Args looks like: field1 = 'filetype'; value1 = {{'c6', ''}}; Args = struct(field1, {value1});
-            %so we get, for example,  'c6' out of it.
-            filetype = filetype{1}; %to make it a sring
-            
-            %getting the date            
-            date = get(findobj('Tag', 'edit5'), 'String'); %date has a format of 20-Mar-2017
-            datev = datevec(date); %datev = [2017 3 20 ...]
-            assignin('base', 'date', date)
-            handles.year = num2str(datev(1)); % '2017'
-            
-            handles.month = num2str(datev(2)); % '3'            
-            if isequal(size(handles.month, 2), 1)
-                handles.month = ['0', handles.month];
-            end            
-            
-            handles.day = num2str(datev(3));
-            if isequal(size(handles.day, 2), 1)
-                handles.day = ['0', handles.day];
-            end 
-            
-            
-            %filepath
-            filepath = [handles.filefolderpath, '\', filetype,'\', handles.year, '\', handles.month];
-            
-            files = dir(filepath); %all files and folders from the "address = filepath 
-            files = {files(3:end).name}'; %delete first three folders, because they are always '.' and '..'
+            %list of arguments      
+            handles.lst_with_args(i) = uicontrol('Style','listbox','FontSize', 9,... 
+                      'Position',[1180 (600-75*i) 136 50],...
+                      'String',str); 
 
-            %checking whether the folder has any files
-            if (isempty(files))
-                message = ['There are no files of ', filetype, ' type for ', date, ' at ', handles.filefolderpath, ', which are necessary for ', handles.chosenfunc];
-                Sysmessage(message); %send message to the Sysmessage edit box
-            else
-                %find all files related to the chosen date
-                %files2 will contain all files related to the date = 'date'              
-                files2 = files_relatedto_date(files, handles.year, handles.month, handles.day);
-                files2 = files2{1}; %if files2 still has several files we choose the first one                
-                
-                %checking whether the folder has necessary files
-                if (isempty(files2))
+            %it's necessary to save all objects created to delete them later. 
+            %This information is saved in handles.argobj      
+            handles.temphndl = [handles.argpanel(i), handles.lst_with_args(i)];
+            handles.argobj = [handles.argobj, handles.temphndl];       
+
+            if (isequal(field_i, 'file'))
+
+                filetype = args_i{1}(1); % because that's how the file-wise part of Args looks like: field1 = 'filetype'; value1 = {{'c6', ''}}; Args = struct(field1, {value1});
+                %so we get, for example,  'c6' out of it.
+                filetype = filetype{1}; %to make it a sring
+
+                %getting the date            
+                date = get(findobj('Tag', 'edit5'), 'String'); %date has a format of 20-Mar-2017
+                datev = datevec(date); %datev = [2017 3 20 ...]
+                assignin('base', 'date', date)
+                handles.year = num2str(datev(1)); % '2017'
+
+                handles.month = num2str(datev(2)); % '3'            
+                if isequal(size(handles.month, 2), 1)
+                    handles.month = ['0', handles.month];
+                end            
+
+                handles.day = num2str(datev(3));
+                if isequal(size(handles.day, 2), 1)
+                    handles.day = ['0', handles.day];
+                end 
+
+
+                %filepath
+                filepath = [handles.filefolderpath, '\', filetype,'\', handles.year, '\', handles.month];
+
+                files = dir(filepath); %all files and folders from the "address = filepath 
+                files = {files(3:end).name}'; %delete first three folders, because they are always '.' and '..'
+
+                %checking whether the folder has any files
+                if (isempty(files))
                     message = ['There are no files of ', filetype, ' type for ', date, ' at ', handles.filefolderpath, ', which are necessary for ', handles.chosenfunc];
                     Sysmessage(message); %send message to the Sysmessage edit box
                 else
-                    %finally, a path to the file:
-                    fpath = [filepath, '\', files2];
-                    handles.Args.(field_i){1}{2} = fpath;                    
-                    handles.filename = fpath;
-                    Sysmessage(['"', files2, '"', ' was successfully uploaded and the system is ready to plot ', handles.chosenfunc]);
+                    %find all files related to the chosen date
+                    %files2 will contain all files related to the date = 'date'              
+                    files2 = files_relatedto_date(files, handles.year, handles.month, handles.day);
+                    files2 = files2{1}; %if files2 still has several files we choose the first one                
+
+                    %checking whether the folder has necessary files
+                    if (isempty(files2))
+                        message = ['There are no files of ', filetype, ' type for ', date, ' at ', handles.filefolderpath, ', which are necessary for ', handles.chosenfunc];
+                        Sysmessage(message); %send message to the Sysmessage edit box
+                    else
+                        %finally, a path to the file:
+                        fpath = [filepath, '\', files2];
+                        handles.Args.(field_i){1}{2} = fpath;                    
+                        handles.filename = fpath;
+                        Sysmessage(['"', files2, '"', ' was successfully uploaded and the system is ready to plot ', handles.chosenfunc]);
+                    end
                 end
             end
         end
-    end
+    else   
+        Sysmessage (handles.Sysmesnofiles)
+    end   
     guidata(hObject, handles);
 end
 
@@ -522,34 +527,38 @@ end
 % "Plot" button
 % --- Executes on button press in pushbutton6.
 function pushbutton6_Callback(hObject, eventdata, handles)
-    lst_with_fncts = findobj('Tag', 'listbox2'); %lst_with_fncts - listbox with function names
-    contents = cellstr(get(lst_with_fncts,'String'));%all names of functions from the listbox with functions
-    chosen_fnct = contents{get(lst_with_fncts,'Value')}; %a user chose a function "chosen_fnct" 
-    
-    %getting all of values of arguments chosen by a user
-    fieldnms = fieldnames(handles.Args);
-    
-    specific_args = cell(1, size(fieldnms, 1));%specific_args saves arguments' values to pass to a function
-    for i = 1:size(fieldnms, 1)
-        field_i = fieldnms(i); %field_i is a cell 1x1
-        field_i = field_i{1}; %field_i becomes a string
-        args_i = handles.Args.(field_i); %get all args from the i-field
-        j = get(handles.lst_with_args(i),'Value');
-        temp = args_i{j}(2); %temp is a cell 1x1
-        specific_args{1, i} = temp{1}; %temp{1} is a string   
-    end
-    
-    %runc the chosen_fnct with arguments from the "Scripts" Folder
-    cd('./Scripts')
-    feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
-    cd('../') %get back to the main folder
-    handles.counterofgraphs = handles.counterofgraphs + 1;
-    handles.currentgraphs = [handles.currentgraphs, struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', handles.Args)];
-    assignin('base', 'counterofgraphs', handles.counterofgraphs)
-    assignin('base', 'currentgraphs', handles.currentgraphs)
-    
-    SetAllButtonDownFcn(hObject, handles);
-    guidata(hObject, handles);
+    if (handles.filefolderchosen == 1)
+        lst_with_fncts = findobj('Tag', 'listbox2'); %lst_with_fncts - listbox with function names
+        contents = cellstr(get(lst_with_fncts,'String'));%all names of functions from the listbox with functions
+        chosen_fnct = contents{get(lst_with_fncts,'Value')}; %a user chose a function "chosen_fnct" 
+
+        %getting all of values of arguments chosen by a user
+        fieldnms = fieldnames(handles.Args);
+
+        specific_args = cell(1, size(fieldnms, 1));%specific_args saves arguments' values to pass to a function
+        for i = 1:size(fieldnms, 1)
+            field_i = fieldnms(i); %field_i is a cell 1x1
+            field_i = field_i{1}; %field_i becomes a string
+            args_i = handles.Args.(field_i); %get all args from the i-field
+            j = get(handles.lst_with_args(i),'Value');
+            temp = args_i{j}(2); %temp is a cell 1x1
+            specific_args{1, i} = temp{1}; %temp{1} is a string   
+        end
+
+        %runc the chosen_fnct with arguments from the "Scripts" Folder
+        cd('./Scripts')
+        feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
+        cd('../') %get back to the main folder
+        handles.counterofgraphs = handles.counterofgraphs + 1;
+        handles.currentgraphs = [handles.currentgraphs, struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', handles.Args)];
+        assignin('base', 'counterofgraphs', handles.counterofgraphs)
+        assignin('base', 'currentgraphs', handles.currentgraphs)
+
+        SetAllButtonDownFcn(hObject, handles);
+        guidata(hObject, handles);
+    else   
+        Sysmessage (handles.Sysmesnofiles)
+    end 
 end
 
 %Button "Clear out the axes"
@@ -677,14 +686,20 @@ end
 
 %This function sends line to the Sysmessage edit box
 function Sysmessage(line)
-    str = get(findobj('Tag', 'Sysmessage'), 'String');
+    hEdit = findobj('Tag', 'Sysmessage');
+    str = get(hEdit, 'String');
     time = [datestr(datetime('now'), 'HH:MM:SS'), ':> '];
     if (isempty(str))
         str = char([time, line]);
     else        
         str = char({str, [time, line]});
     end
-    set(findobj('Tag', 'Sysmessage'), 'String', str)
+    set(hEdit, 'String', str)
+    
+    %We want to Set (hEdit, 'Sliderposition', 'bottom'); Implementation:
+    jhEdit = feval('findjobj', hEdit); % Get the underlying Java control peer (a scroll-pane object)
+    jEdit = jhEdit.getComponent(0).getComponent(0); % Get the scroll-pane's internal edit control
+    jEdit.setCaretPosition(jEdit.getDocument.getLength); % Now move the caret position to the end of the text
 end
 
 function Sysmessage_Callback(hObject, eventdata, handles)
