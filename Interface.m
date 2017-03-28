@@ -98,6 +98,7 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     
     %sum of heights of available axes
     handles.panelheight = height_of_axes(handles.axesav);
+    handles.starting_size_of_panel = get(handles.uipanel8, 'Position');
     
     %This is for MassSpectrum
     handles.timecorrectness = 0; % = 1 if massspectime has the following format: 'HH:MM:SS' 
@@ -271,11 +272,43 @@ end
 
 % --- Executes when figure1 is resized.
 function figure1_SizeChangedFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 end
 
+% This function sets a ButtonDownFunction - so that axes can be moved
+function SetAllButtonDownFcn (hObject, handles)    
+    for ind_sabdf=1:numel(handles.axesav)
+        set (handles.axesav{ind_sabdf}, 'ButtonDownFcn',@axes_ButtonDownFcn);
+    end   
+end
+
+function axes_ButtonDownFcn(hObject, eventdata)
+    
+    handles = guidata(hObject);
+    % What is being dragged
+    handles.dragging = hObject;
+    handles.orPos = get(gcf,'CurrentPoint');
+    
+    % handles.currentaxes is passed to plots
+    handles.currentaxes = hObject;
+    
+    % Colors of all axes should be white, except for the current axis 
+    SetAxesColors(handles.axesav, handles.currentaxes)
+    set(hObject, 'Color', [1 0.97 0.92])
+    
+    guidata(hObject, handles);
+    
+end
+
+function SetAxesColors (axs, curax)
+
+    for ind_sac=1:numel(axs)
+        a = axs{ind_sac};
+        if (~isequal(a, curax))
+            set (a, 'Color', 'White')
+        end    
+    end 
+    
+end
 % --- Executes on mouse press over figure background, over a disabled or
 % --- inactive control, or over an axes background.
 function figure1_WindowButtonUpFcn(hObject, eventdata, handles)
@@ -305,96 +338,8 @@ function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
     guidata(hObject, handles);
 end
 
-% --- Executes on mouse press over axes background.
-function axes1_ButtonDownFcn(hObject, eventdata)
-    handles = guidata(hObject);
-    handles.dragging = handles.axes1;
-    handles.orPos = get(gcf,'CurrentPoint');
-    guidata(hObject, handles);
-end
 
-function axes2_ButtonDownFcn(hObject, eventdata)
-    handles = guidata(hObject);
-    handles.dragging = handles.axes2;
-    handles.orPos = get(gcf,'CurrentPoint');
-    guidata(hObject, handles);
-end
-
-function axes3_ButtonDownFcn(hObject, eventdata)
-    handles = guidata(hObject);
-    handles.dragging = handles.axes3;
-    handles.orPos = get(gcf,'CurrentPoint');
-    guidata(hObject, handles);
-end
-
-function axes4_ButtonDownFcn(hObject, eventdata)
-    handles = guidata(hObject);
-    handles.dragging = handles.axes4;
-    handles.orPos = get(gcf,'CurrentPoint');
-    guidata(hObject, handles);
-end
-
-function axes5_ButtonDownFcn(hObject, eventdata)
-    handles = guidata(hObject);
-    handles.dragging = handles.axes5;
-    handles.orPos = get(gcf,'CurrentPoint');
-    guidata(hObject, handles);
-end
-
-function SetAllButtonDownFcn (hObject, handles)
-    set (handles.axes1, 'ButtonDownFcn',@axes1_ButtonDownFcn);
-    set (handles.axes2, 'ButtonDownFcn',@axes2_ButtonDownFcn);
-    set (handles.axes3, 'ButtonDownFcn',@axes3_ButtonDownFcn);
-    set (handles.axes4, 'ButtonDownFcn',@axes4_ButtonDownFcn);
-    set (handles.axes5, 'ButtonDownFcn',@axes5_ButtonDownFcn);
-end
-
-% --- Executes on button press in radiobutton5.
-%Axes1 radiobutton
-function radiobutton5_Callback(hObject, eventdata, handles)
-    if (get(hObject,'Value')==1)
-        handles.currentaxes = handles.axes1;
-        guidata(hObject, handles);
-    end
-end
-
-% --- Executes on button press in radiobutton6.
-%Axes2 radiobutton
-function radiobutton6_Callback(hObject, eventdata, handles)
-    if (get(hObject,'Value')==1)
-        handles.currentaxes = handles.axes2;
-        guidata(hObject, handles);
-    end
-end
-
-% --- Executes on button press in radiobutton7.
-%Axes3 radiobutton
-function radiobutton7_Callback(hObject, eventdata, handles)
-    if (get(hObject,'Value')==1)
-        handles.currentaxes = handles.axes3;
-        guidata(hObject, handles);
-    end
-end
-
-% --- Executes on button press in radiobutton8.
-%Axes4 radiobutton
-function radiobutton8_Callback(hObject, eventdata, handles)
-    if (get(hObject,'Value')==1)
-        handles.currentaxes = handles.axes4;
-        guidata(hObject, handles);
-    end
-end
-
-% --- Executes on button press in radiobutton9.
-%Axes5 radiobutton
-function radiobutton9_Callback(hObject, eventdata, handles)
-    if (get(hObject,'Value')==1)
-        handles.currentaxes = handles.axes5;
-        guidata(hObject, handles);
-    end
-end
-
-%this function gets file names, a year, a month and a day and returns those files from fls that contain 'ymd' 
+% This function gets file names, a year, a month and a day and returns those files from fls that contain 'ymd' 
 function [fls2] = files_relatedto_date(fls, y, m, d)
     p_frd = 1;
     fls2{p_frd} = [];
@@ -580,6 +525,8 @@ function pushbutton7_Callback(hObject, eventdata, handles)
     end    
     cla(handles.currentaxes, 'reset') %clear the axes
     
+    SetAllButtonDownFcn(hObject, handles);
+    
     guidata(hObject, handles);
 end
 
@@ -604,16 +551,9 @@ end
 
 % --- Executes during object creation, after setting all properties.
 function edit4_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
 end
 
 % --- Executes on button press in checkbox2.
@@ -744,7 +684,7 @@ end
 
 % --- Executes on slider movement.
 function slider4_Callback(hObject, eventdata, handles)
-    %set(handles.slider4, 'SliderStep', [0.1,0.1]); 
+
     %Get slider's position 
     sl_pos = get(hObject, 'Value'); 
     %Get uipanel8 position  (to be moved)
@@ -752,11 +692,12 @@ function slider4_Callback(hObject, eventdata, handles)
     %Get uipanel7 position
     fig_pos = get(handles.uipanel7, 'Position'); 
      
-    %Get sum of heights of available axes
-    %handles.panelheight = height_of_axes(handles.axesav);
-    %Set uipanel1 new position 
-    set(handles.uipanel8, 'Position', [panel_pos(1), fig_pos(4)*sl_pos, panel_pos(3), panel_pos(4)]);
+    max_pos = fig_pos - handles.starting_size_of_panel;
+    max_pos = max_pos(4);
+    set(handles.uipanel8, 'Position', [panel_pos(1), max_pos*(1-sl_pos), panel_pos(3), panel_pos(4)]);
+    
     guidata(hObject, handles);
+    
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -794,6 +735,8 @@ end
 
 % --- Executes on button press in NewAxes.
 function NewAxes_Callback(hObject, eventdata, handles)    
+    
+    % There are two panels. One is moving and the other is a static background
     panel_pos = get(handles.uipanel8, 'Position'); 
     fig_pos = get(handles.uipanel7, 'Position');
     
@@ -801,30 +744,35 @@ function NewAxes_Callback(hObject, eventdata, handles)
     h_ax = highest_axes(handles.axesav);
     highest_pos = get(h_ax, 'Position'); % its position
     
-    %space for new axes = y-size of the highestaxes:
+    % space for new axes = y-size of the highestaxes:
     delta_y = highest_pos(4);
     
     % Change the size and position of panels with axes
     fig_pos(4) = fig_pos(4) + delta_y;
     fig_pos(2) = fig_pos(2) - delta_y;
-    panel_pos(4) = panel_pos(4) + delta_y;
-    
+    panel_pos(4) = panel_pos(4) + delta_y;    
     set (handles.uipanel7, 'Position', fig_pos)
     set (handles.uipanel8, 'Position', panel_pos)
     
-    % find the highest axes from currently available ones
+    % again find the highest axes from currently available ones
     h_ax = highest_axes(handles.axesav);
     highest_pos = get(h_ax, 'Position'); % its position
     
+    % add a new axes
     numofax = size(handles.axesav, 2); %number of axes available
     tag = ['axes', num2str(numofax+1)];
-    new_ax_pos = highest_pos;
-    assignin ('base', 'ha', h_ax); 
+    new_ax_pos = highest_pos; 
     new_ax_pos(2) = new_ax_pos(2) + delta_y;
-    %axes(handles.uipanel8, 'Units', 'characters', 'ActivePositionProperty', 'position', 'Position', new_ax_pos);
     handles.(tag) = axes(handles.uipanel8, 'Units', 'characters', 'ActivePositionProperty', 'position', 'Position', new_ax_pos);
-        
+    
+    % add a new axes to axesavailable
     handles.axesav{numofax + 1} = handles.(tag); 
+    
+    % Move the slider up
+    set(findobj('Tag', 'slider4'), 'Value', 1)
+    slider4_Callback(findobj('Tag', 'slider4'), eventdata, handles)
+    
+    SetAllButtonDownFcn(hObject, handles); % So that axes can be moved
     
     guidata(hObject, handles);
 end
