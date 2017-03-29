@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 29-Mar-2017 10:42:48
+    % Last Modified by GUIDE v2.5 29-Mar-2017 21:23:27
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1; 
@@ -64,7 +64,7 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.axeschosen = 1;
     handles.currentaxes = [];
     handles.axeschosen = 0;
-    handles.Sysmesnoaxes = 'Please choose the axis _';
+    handles.Sysmesnoaxes = 'Please choose an axis _';
     
     %Sliders:
     handles.slider_leftend = datenum(handles.starttime); handles.slider_rightend = datenum(handles.stoptime);
@@ -418,12 +418,12 @@ function listbox2_Callback(hObject, eventdata, handles)
             %panel which is used only to display a name of an argument
             panelname = field_i; %name of a new panel
             handles.argpanel(i) = uipanel ('Title',panelname,'FontSize',11,...
-                      'BackgroundColor','white',...
-                      'Position',[.856 (.812-.102*i) .10 .09]);
+                      'BackgroundColor','white', 'Units', 'characters',...
+                      'Position', [212 (39.7-7*(i-1)) 25 4.5]); %[.856 (.812-.102*i) .10 .09]);
 
             %list of arguments      
             handles.lst_with_args(i) = uicontrol('Style','listbox','FontSize', 9,... 
-                      'Position',[1180 (600-75*i) 136 50],...
+                      'Units', 'characters', 'Position', [212 (38.4-7*(i-1)) 25 4.5],... %,[1180 (600-75*i) 136 50],...
                       'String',str); 
 
             %it's necessary to save all objects created to delete them later. 
