@@ -22,10 +22,10 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 29-Mar-2017 21:23:27
+    % Last Modified by GUIDE v2.5 02-Apr-2017 15:18:31
 
     % Begin initialization code - DO NOT EDIT
-    gui_Singleton = 1; 
+    gui_Singleton = 1;
     gui_State = struct('gui_Name',       mfilename, ... 
                        'gui_Singleton',  gui_Singleton, ...
                        'gui_OpeningFcn', @Interface_OpeningFcn, ...
@@ -87,11 +87,8 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     %To save all information about arguments
     handles.Args = struct();
     
-    %Number of plotted graphs
-    handles.counterofgraphs = 0;
-    
     %To save all information about plotted graphs and spectrograms
-    handles.currentgraphs = struct('Script', {''}, 'Axes', handles.currentaxes, 'Args', handles.Args);
+    handles.currentgraphs = [];
     
     % This line is sent to Sysmessages when a user didn't choose a folder
     % with files
@@ -162,9 +159,9 @@ end
 function axes1_CreateFcn(hObject, eventdata, handles)
 end
 
-% --- Executes on button press in pushbutton1.
-function pushbutton1_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton1 (see GCBO)
+% --- Executes on button press in rebuild_all.
+function rebuild_all_Callback(hObject, eventdata, handles)
+% hObject    handle to rebuild_all (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % axes(handles.axes1);
@@ -176,6 +173,8 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % set(findobj('Tag', 'slider2'), 'Value', 0)
 % set(findobj('Tag', 'slider3'), 'Value', 1)
 % SetAllButtonDownFcn(hObject, handles);
+    guidata(hObject, handles);
+
 end
 
 % Start_time editbox
@@ -231,9 +230,11 @@ end
 
 % --- Executes during object creation, after setting all properties.
 function edit2_CreateFcn(hObject, eventdata, handles)
+    
     if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
         set(hObject,'BackgroundColor','white');
-    end   
+    end
+    
 end
 
 % --- Executes on time-slider movement.
@@ -257,9 +258,11 @@ end
 
 % --- Executes during object creation, after setting all properties.
 function slider2_CreateFcn(hObject, eventdata, handles)
+    
     if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
         set(hObject,'BackgroundColor',[.9 .9 .9]);
     end
+    
 end
 
 % --- Executes on time-slider movement.
@@ -283,10 +286,11 @@ end
 
 % --- Executes during object creation, after setting all properties.
 function slider3_CreateFcn(hObject, eventdata, handles)
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
+
+    if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor',[.9 .9 .9]);
+    end
+
 end
 
 % --- Executes when figure1 is resized.
@@ -295,9 +299,11 @@ end
 
 % This function sets a ButtonDownFunction - so that axes can be moved
 function SetAllButtonDownFcn (hObject, handles)    
+    
     for ind_sabdf=1:numel(handles.axesav)
         set (handles.axesav{ind_sabdf}, 'ButtonDownFcn',@axes_ButtonDownFcn);
-    end   
+    end
+    
 end
 
 function axes_ButtonDownFcn(hObject, eventdata)
@@ -329,6 +335,7 @@ function SetAxesColors (axs, curax)
     end 
     
 end
+
 % --- Executes on mouse press over figure background, over a disabled or
 % --- inactive control, or over an axes background.
 function figure1_WindowButtonUpFcn(hObject, eventdata, handles)
@@ -358,7 +365,8 @@ function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
     
 end
 
-% change all axes colors to white
+% change all axes colors to white when clicking on the uipanel8.
+% currentaxis becomes []
 function uipanel8_ButtonDownFcn(hObject, eventdata, handles)
     
     handles = guidata(hObject);
@@ -367,6 +375,14 @@ function uipanel8_ButtonDownFcn(hObject, eventdata, handles)
     SetAxesColors(handles.axesav, handles.currentaxes)
     
     guidata(hObject, handles);
+    
+end
+
+% change all axes colors to white when clicking on the uipanel7.
+% currentaxis becomes []
+function uipanel7_ButtonDownFcn(hObject, eventdata, handles)
+
+    uipanel8_ButtonDownFcn(hObject, eventdata, handles);
     
 end
 
@@ -537,9 +553,14 @@ function pushbutton6_Callback(hObject, eventdata, handles)
             cd('./Scripts')
             feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
             cd('../') %get back to the main folder
-            handles.counterofgraphs = handles.counterofgraphs + 1;
-            handles.currentgraphs = [handles.currentgraphs, struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', handles.Args)];
-            assignin('base', 'counterofgraphs', handles.counterofgraphs)
+            
+            % add info about the plotted graph to handles.currentgraphs
+            if (isempty(handles.currentgraphs)) % handles.currentgraphs is initialized with empty fields to set the structure of this variable
+                handles.currentgraphs = struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', handles.Args); %this empty line is rewritten
+            else 
+                handles.currentgraphs = [handles.currentgraphs, struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', handles.Args)];
+            end            
+            
             assignin('base', 'currentgraphs', handles.currentgraphs)
 
             SetAllButtonDownFcn(hObject, handles);
@@ -554,19 +575,18 @@ function pushbutton6_Callback(hObject, eventdata, handles)
 end
 
 %Button "Clear out the axes"
-% --- Executes on button press in pushbutton7.
-function pushbutton7_Callback(hObject, eventdata, handles)
+% --- Executes on button press in clearbutton.
+function clearbutton_Callback(hObject, eventdata, handles)
 
     delete_ind = []; %delete_ind will contain rows to be deleted from handles.currentgraphs
-    lim = handles.counterofgraphs+1; 
-    for i = 2:lim
+    lim = numel(handles.currentgraphs); 
+    for i = 1:lim
         if (handles.currentgraphs(i).Axes == handles.currentaxes) %compare an axes chosen by a user and i-axes in currentgraphs             
-            handles.counterofgraphs = handles.counterofgraphs - 1; 
             delete_ind = [delete_ind, i]; %handles.currentgraphs(i) = [];
         end
     end
     
-    for j = size(delete_ind, 2):-1:1
+    for j = numel(delete_ind):-1:1
         handles.currentgraphs(delete_ind(j)) = []; %clear rows from handles.currentgraphs
     end    
     cla(handles.currentaxes, 'reset') %clear the axes
@@ -623,7 +643,7 @@ function checkbox2_Callback(hObject, eventdata, handles)
             cd ('../')
             SetAllButtonDownFcn(hObject, handles);
         end
-    end
+    end    
 end
 
 
@@ -656,9 +676,11 @@ end
 
 % --- Executes during object creation, after setting all properties.
 function edit5_CreateFcn(hObject, eventdata, handles)
+
     if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
         set(hObject,'BackgroundColor','white');
     end
+    
 end
 
 
@@ -721,8 +743,10 @@ end
 
 % --- Executes on button press in openprjbutton.
 function openprjbutton_Callback(hObject, eventdata, handles)
+
     delete(handles.figure1)
     uiopen(['./Projects','figure'])
+
 end
 
 % --- Executes on button press in newwindowbutton.
@@ -762,9 +786,11 @@ end
 
 % --- Executes during object creation, after setting all properties.
 function slider4_CreateFcn(hObject, eventdata, handles)
+
     if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
         set(hObject,'BackgroundColor',[.9 .9 .9]);
     end
+    
 end
 
 % --- Executes during object creation, after setting all properties.
