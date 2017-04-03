@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 02-Apr-2017 15:18:31
+    % Last Modified by GUIDE v2.5 02-Apr-2017 15:57:35
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -99,7 +99,7 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     
     %sum of heights of available axes
     handles.panelheight = height_of_axes(handles.axesav);
-    handles.starting_size_of_panel = get(handles.uipanel8, 'Position');
+    handles.starting_size_of_panel = get(handles.scrolling_panel, 'Position');
     
     %This is for MassSpectrum
     handles.timecorrectness = 0; % = 1 if massspectime has the following format: 'HH:MM:SS' 
@@ -247,7 +247,7 @@ function slider2_Callback(hObject, eventdata, handles) %start_time slider
     edit1_Callback(findobj('Tag', 'edit1'), eventdata, handles);
 
     %automatic plot (without pressing the button "Plot"
-    pushbutton6_Callback (findobj('Tag', 'pushbutton6'), eventdata, handles)
+    plotbutton_Callback (findobj('Tag', 'plotbutton'), eventdata, handles)
     handles.slider_leftend = datenum(handles.starttime); handles.slider_rightend = datenum(handles.stoptime);
     guidata(hObject, handles);
     SetAllButtonDownFcn(hObject, handles);
@@ -275,7 +275,7 @@ function slider3_Callback(hObject, eventdata, handles) %stop_time slider
     edit2_Callback(findobj('Tag', 'edit2'), eventdata, handles);
 
     %automatic plot (without pressing the button "Plot"
-    pushbutton6_Callback (findobj('Tag', 'pushbutton6'), eventdata, handles)
+    plotbutton_Callback (findobj('Tag', 'plotbutton'), eventdata, handles)
     handles.slider_leftend = datenum(handles.starttime); handles.slider_rightend = datenum(handles.stoptime);
     guidata(hObject, handles);
     SetAllButtonDownFcn(hObject, handles);
@@ -365,9 +365,9 @@ function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
     
 end
 
-% change all axes colors to white when clicking on the uipanel8.
+% change all axes colors to white when clicking on the scrolling_panel.
 % currentaxis becomes []
-function uipanel8_ButtonDownFcn(hObject, eventdata, handles)
+function scrolling_panel_ButtonDownFcn(hObject, eventdata, handles)
     
     handles = guidata(hObject);
     handles.currentaxes = [];
@@ -378,11 +378,11 @@ function uipanel8_ButtonDownFcn(hObject, eventdata, handles)
     
 end
 
-% change all axes colors to white when clicking on the uipanel7.
+% change all axes colors to white when clicking on the static_panel.
 % currentaxis becomes []
-function uipanel7_ButtonDownFcn(hObject, eventdata, handles)
+function static_panel_ButtonDownFcn(hObject, eventdata, handles)
 
-    uipanel8_ButtonDownFcn(hObject, eventdata, handles);
+    scrolling_panel_ButtonDownFcn(hObject, eventdata, handles);
     
 end
 
@@ -527,8 +527,8 @@ function listbox2_CreateFcn(hObject, eventdata, handles)
 end
 
 % "Plot" button
-% --- Executes on button press in pushbutton6.
-function pushbutton6_Callback(hObject, eventdata, handles)
+% --- Executes on button press in plotbutton.
+function plotbutton_Callback(hObject, eventdata, handles)
     
     if (handles.axeschosen == 1)
         if (handles.filefolderchosen == 1)
@@ -648,8 +648,8 @@ end
 
 
 % Save as a picture (screencapture)
-% --- Executes on button press in pushbutton8.
-function pushbutton8_Callback(hObject, eventdata, handles)
+% --- Executes on button press in save_as_pic_button.
+function save_as_pic_button_Callback(hObject, eventdata, handles)
 
     img = feval('screencapture', handles.figure1, [42 -150 1165 882]);
     [FileName, FilePath] = uiputfile({'*.png'}, 'Save as', './ScreenShots/NewShot');  
@@ -771,14 +771,14 @@ function slider4_Callback(hObject, eventdata, handles)
 
     %Get slider's position 
     sl_pos = get(hObject, 'Value'); 
-    %Get uipanel8 position  (to be moved)
-    panel_pos = get(handles.uipanel8, 'Position'); 
-    %Get uipanel7 position
-    fig_pos = get(handles.uipanel7, 'Position'); 
+    %Get scrolling_panel position  (to be moved)
+    panel_pos = get(handles.scrolling_panel, 'Position'); 
+    %Get static_panel position
+    fig_pos = get(handles.static_panel, 'Position'); 
      
     max_pos = fig_pos - handles.starting_size_of_panel;
     max_pos = max_pos(4);
-    set(handles.uipanel8, 'Position', [panel_pos(1), max_pos*(1-sl_pos), panel_pos(3), panel_pos(4)]);
+    set(handles.scrolling_panel, 'Position', [panel_pos(1), max_pos*(1-sl_pos), panel_pos(3), panel_pos(4)]);
     
     guidata(hObject, handles);
     
@@ -798,7 +798,7 @@ function savebutton_CreateFcn(hObject, eventdata, handles)
 end
 
 % --- Executes during object creation, after setting all properties.
-function pushbutton6_CreateFcn(hObject, eventdata, handles)
+function plotbutton_CreateFcn(hObject, eventdata, handles)
 end
 
 % Find the highest axes
@@ -821,12 +821,12 @@ function [ha] = highest_axes(axs)
     
 end
 
-% --- Executes on button press in NewAxes.
-function NewAxes_Callback(hObject, eventdata, handles)    
+% --- Executes on button press in NewAxis.
+function NewAxis_Callback(hObject, eventdata, handles)    
     
     % There are two panels. One is moving and the other is a static background
-    panel_pos = get(handles.uipanel8, 'Position'); 
-    fig_pos = get(handles.uipanel7, 'Position');
+    panel_pos = get(handles.scrolling_panel, 'Position'); 
+    fig_pos = get(handles.static_panel, 'Position');
     
     % find the highest axes from currently available ones
     h_ax = highest_axes(handles.axesav);
@@ -839,8 +839,8 @@ function NewAxes_Callback(hObject, eventdata, handles)
     fig_pos(4) = fig_pos(4) + delta_y;
     fig_pos(2) = fig_pos(2) - delta_y;
     panel_pos(4) = panel_pos(4) + delta_y;    
-    set (handles.uipanel7, 'Position', fig_pos)
-    set (handles.uipanel8, 'Position', panel_pos)
+    set (handles.static_panel, 'Position', fig_pos)
+    set (handles.scrolling_panel, 'Position', panel_pos)
     
     % again find the highest axes from currently available ones
     h_ax = highest_axes(handles.axesav);
@@ -851,7 +851,7 @@ function NewAxes_Callback(hObject, eventdata, handles)
     tag = ['axes', num2str(numofax+1)];
     new_ax_pos = highest_pos; 
     new_ax_pos(2) = new_ax_pos(2) + delta_y;
-    handles.(tag) = axes(handles.uipanel8, 'Units', 'characters', 'ActivePositionProperty', 'position', 'Position', new_ax_pos);
+    handles.(tag) = axes(handles.scrolling_panel, 'Units', 'characters', 'ActivePositionProperty', 'position', 'Position', new_ax_pos);
     
     % add a new axes to axesavailable
     handles.axesav{numofax + 1} = handles.(tag); 
