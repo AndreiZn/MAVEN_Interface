@@ -56,7 +56,7 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     
     %Files and times:    
     handles.filename = '';
-    handles.filefound = 0; %1 if the file of necessary type and date was found
+    handles.filefound = 0; %1 if a file of a necessary type and date was found
     handles.starttime = get(findobj('Tag', 'start_editbox'), 'String');
     handles.stoptime = get(findobj('Tag', 'stop_editbox'), 'String');
     
@@ -158,24 +158,6 @@ end
 
 % --- Executes during object creation, after setting all properties.
 function axes1_CreateFcn(hObject, eventdata, handles)
-end
-
-% --- Executes on button press in rebuild_all.
-function rebuild_all_Callback(hObject, eventdata, handles)
-% hObject    handle to rebuild_all (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% axes(handles.axes1);
-% c0forInterface(handles.starttime, handles.stoptime, handles.filename);
-% handles.slider_leftend = handles.starttime; handles.slider_rightend = handles.stoptime;
-% handles.legendmoments = momentsforInterface(handles.filenameformoments, handles.starttimemom, handles.stoptimemom, handles.masstype, handles.axes2, handles.axes3, handles.axes4);
-% magfforInterface (handles.filename, handles.starttime, handles.stoptime, handles.axes6);
-% guidata(hObject, handles);
-% set(findobj('Tag', 'slider2'), 'Value', 0)
-% set(findobj('Tag', 'slider3'), 'Value', 1)
-% SetAllButtonDownFcn(hObject, handles);
-    guidata(hObject, handles);
-
 end
 
 % Start_time editbox
@@ -544,26 +526,38 @@ function plotbutton_Callback(hObject, eventdata, handles)
                 %getting all of values of arguments chosen by a user
                 fieldnms = fieldnames(handles.Args);
 
-                specific_args = cell(1, size(fieldnms, 1));%specific_args saves arguments' values to pass to a function
+                specific_args = cell(1, size(fieldnms, 1)); % specific_args saves arguments' values to pass to a function
+                chosen_Args = handles.Args; % the same as specific_args, but with field_nms, while sp_args consist only of values
+                % specific_args are passed to Scripts. Scripts don't care
+                % about filednames; chosen_Args are more convinient to use,
+                % for example, in rebuild_all function
+                % chosen_Args is initialized as handles.Args to get the
+                % correct structure
+                
                 for i = 1:size(fieldnms, 1)
                     field_i = fieldnms(i); %field_i is a cell 1x1
                     field_i = field_i{1}; %field_i becomes a string
                     args_i = handles.Args.(field_i); %get all args from the i-field
                     j = get(handles.lst_with_args(i),'Value');
                     temp = args_i{j}(2); %temp is a cell 1x1
-                    specific_args{1, i} = temp{1}; %temp{1} is a string   
+                    specific_args{1, i} = temp{1}; %temp{1} is a string
+                    
+                    chosen_Args.(field_i) = args_i{j};
+                    assignin('base', 'chosen_Args', chosen_Args)
                 end
-
-                %runc the chosen_fnct with arguments from the "Scripts" Folder
+                
+                Sysmessage (['Please wait. "', chosen_fnct, '" is being plotted'])
+                %run the chosen_fnct with arguments from the "Scripts" Folder
                 cd('./Scripts')
                 feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
                 cd('../') %get back to the main folder
-
+                Sysmessage ([chosen_fnct, ' was successfully plotted _'])
+                
                 % add info about the plotted graph to handles.currentgraphs
                 if (isempty(handles.currentgraphs)) % handles.currentgraphs is initialized with empty fields to set the structure of this variable
-                    handles.currentgraphs = struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', handles.Args); %this empty line is rewritten
+                    handles.currentgraphs = struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', chosen_Args); %this empty line is rewritten
                 else 
-                    handles.currentgraphs = [handles.currentgraphs, struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', handles.Args)];
+                    handles.currentgraphs = [handles.currentgraphs, struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', chosen_Args)];
                 end            
 
                 assignin('base', 'currentgraphs', handles.currentgraphs)
@@ -573,7 +567,7 @@ function plotbutton_Callback(hObject, eventdata, handles)
                 guidata(hObject, handles);
                 
             else
-                Sysmessage('There are no files of necessary type for the chosen date'); %send message to the Sysmessage edit box
+                Sysmessage('There are no files of the necessary type for the chosen date _'); %send message to the Sysmessage edit box
             end    
         else   
             Sysmessage (handles.Sysmesnofiles)
@@ -582,6 +576,57 @@ function plotbutton_Callback(hObject, eventdata, handles)
         Sysmessage (handles.Sysmesnoaxes)
     end
     
+end
+
+% --- Executes on button press in rebuild_all.
+function rebuild_all_Callback(hObject, eventdata, handles)
+    
+    if (handles.filefolderchosen == 1)
+        if (handles.filefound == 1)
+            
+            Sysmessage('Please wait. The graphs are being rebuilt _')
+            
+            for i=1:numel(handles.currentgraphs)
+
+                % get all info about i-currentgraph
+                fnct = handles.currentgraphs(i).Script; 
+                ax = handles.currentgraphs(i).Axes;
+                file = handles.currentgraphs(i).Args.file; %file structure
+                filename = file{1,2};
+
+                % get all of values of arguments
+                args = handles.currentgraphs(i).Args;
+                fieldnms = fieldnames(args);
+                specific_args = cell(1, size(fieldnms, 1));%specific_args saves arguments' values to pass to a function
+                for index = 1:size(fieldnms, 1)
+                    field_ind = fieldnms(index); %field_ind is a cell 1x1
+                    field_ind = field_ind{1}; %field_ind becomes a string
+                    args_ind = args.(field_ind); %get all args from the ind-field  
+                    specific_args{1, index} = args_ind{1,2}; % get the value  
+                end
+
+                %runc the chosen_fnct with arguments from the "Scripts" Folder
+                cd('./Scripts')
+                feval(fnct, ax, handles.starttime, handles.stoptime, filename, specific_args)
+                cd('../') %get back to the main folder
+
+            end
+            
+            Sysmessage ('The graphs were successfully rebuilt _')
+            
+            set(findobj('Tag', 'slider2'), 'Value', 0)
+            set(findobj('Tag', 'slider3'), 'Value', 1)
+        else
+            Sysmessage('There are no files of the necessary type for the chosen date _');
+        end    
+    else
+        Sysmessage (handles.Sysmesnofiles)
+    end
+    
+    SetAllButtonDownFcn(hObject, handles);
+    
+    guidata(hObject, handles);
+
 end
 
 %Button "Clear out the axes"
