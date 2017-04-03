@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 02-Apr-2017 15:57:35
+    % Last Modified by GUIDE v2.5 02-Apr-2017 16:19:41
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -56,8 +56,9 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     
     %Files and times:    
     handles.filename = '';
-    handles.starttime = get(findobj('Tag', 'edit1'), 'String');
-    handles.stoptime = get(findobj('Tag', 'edit2'), 'String');
+    handles.filefound = 0; %1 if the file of necessary type and date was found
+    handles.starttime = get(findobj('Tag', 'start_editbox'), 'String');
+    handles.stoptime = get(findobj('Tag', 'stop_editbox'), 'String');
     
     %Current Axes:
     handles.currentaxes = handles.axes1;
@@ -178,14 +179,14 @@ function rebuild_all_Callback(hObject, eventdata, handles)
 end
 
 % Start_time editbox
-function edit1_Callback(hObject, eventdata, handles)
+function start_editbox_Callback(hObject, eventdata, handles)
 
     if (handles.leftsliderflag==0)        
         userstarttime = get(hObject, 'String');
         format = '\d\d:\d\d:\d\d';
         if (~isempty(regexp(userstarttime,format, 'once')))  %format: HH:MM:SS       
             handles.starttime = userstarttime; 
-            Sysmessage(['Start time = ', userstarttime]) 
+            Sysmessage(['Start time = ', userstarttime, ' _']) 
         else
             Sysmessage('Error! Time format is HH:MM:SS')
         end        
@@ -199,7 +200,7 @@ function edit1_Callback(hObject, eventdata, handles)
 end
 
 % --- Executes during object creation, after setting all properties.
-function edit1_CreateFcn(hObject, eventdata, handles)
+function start_editbox_CreateFcn(hObject, eventdata, handles)
 
     if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
         set(hObject,'BackgroundColor','white');
@@ -208,14 +209,14 @@ function edit1_CreateFcn(hObject, eventdata, handles)
 end
 
 % Stop_time editbox
-function edit2_Callback(hObject, eventdata, handles)
+function stop_editbox_Callback(hObject, eventdata, handles)
 
     if (handles.rightsliderflag==0)        
         userstoptime = get(hObject, 'String');
         format = '\d\d:\d\d:\d\d';
         if (~isempty(regexp(userstoptime, format, 'once')))  %format: HH:MM:SS       
             handles.stoptime = userstoptime; 
-            Sysmessage(['Stop time = ', userstoptime]) 
+            Sysmessage(['Stop time = ', userstoptime, ' _']) 
         else
             Sysmessage('Error! Time format is HH:MM:SS')            
         end
@@ -229,7 +230,7 @@ function edit2_Callback(hObject, eventdata, handles)
 end
 
 % --- Executes during object creation, after setting all properties.
-function edit2_CreateFcn(hObject, eventdata, handles)
+function stop_editbox_CreateFcn(hObject, eventdata, handles)
     
     if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
         set(hObject,'BackgroundColor','white');
@@ -244,7 +245,7 @@ function slider2_Callback(hObject, eventdata, handles) %start_time slider
     handles.starttime = datestr(timenum, 'HH:MM:SS');
     handles.leftsliderflag = 1;
     guidata(hObject, handles);
-    edit1_Callback(findobj('Tag', 'edit1'), eventdata, handles);
+    start_editbox_Callback(findobj('Tag', 'start_editbox'), eventdata, handles);
 
     %automatic plot (without pressing the button "Plot"
     plotbutton_Callback (findobj('Tag', 'plotbutton'), eventdata, handles)
@@ -272,7 +273,7 @@ function slider3_Callback(hObject, eventdata, handles) %stop_time slider
     handles.stoptime = datestr(timenum, 'HH:MM:SS');
     handles.rightsliderflag = 1;
     guidata(hObject, handles);
-    edit2_Callback(findobj('Tag', 'edit2'), eventdata, handles);
+    stop_editbox_Callback(findobj('Tag', 'stop_editbox'), eventdata, handles);
 
     %automatic plot (without pressing the button "Plot"
     plotbutton_Callback (findobj('Tag', 'plotbutton'), eventdata, handles)
@@ -454,9 +455,8 @@ function listbox2_Callback(hObject, eventdata, handles)
                 filetype = filetype{1}; %to make it a sring
 
                 %getting the date            
-                date = get(findobj('Tag', 'edit5'), 'String'); %date has a format of 20-Mar-2017
+                date = get(findobj('Tag', 'date_editbox'), 'String'); %date has a format of 20-Mar-2017
                 datev = datevec(date); %datev = [2017 3 20 ...]
-                assignin('base', 'date', date)
                 handles.year = num2str(datev(1)); % '2017'
 
                 handles.month = num2str(datev(2)); % '3'            
@@ -480,6 +480,7 @@ function listbox2_Callback(hObject, eventdata, handles)
                 if (isempty(files))
                     message = ['There are no files of ', filetype, ' type for ', date, ' at ', handles.filefolderpath, ', which are necessary for ', handles.chosenfunc];
                     Sysmessage(message); %send message to the Sysmessage edit box
+                    handles.filefound = 0; %a file was not found
                 else
                     %find all files related to the chosen date
                     %files2 will contain all files related to the date = 'date'              
@@ -490,12 +491,14 @@ function listbox2_Callback(hObject, eventdata, handles)
                     if (isempty(files2))
                         message = ['There are no files of ', filetype, ' type for ', date, ' at ', handles.filefolderpath, ', which are necessary for ', handles.chosenfunc];
                         Sysmessage(message); %send message to the Sysmessage edit box
+                        handles.filefound = 0; %a file was not found
                     else
                         %finally, a path to the file:
                         fpath = [filepath, '\', files2];
                         handles.Args.(field_i){1}{2} = fpath;                    
                         handles.filename = fpath;
                         Sysmessage(['"', files2, '"', ' was successfully uploaded and the system is ready to plot ', handles.chosenfunc]);
+                        handles.filefound = 1; %a file was found
                     end
                 end
             end
@@ -532,39 +535,46 @@ function plotbutton_Callback(hObject, eventdata, handles)
     
     if (handles.axeschosen == 1)
         if (handles.filefolderchosen == 1)
-            lst_with_fncts = findobj('Tag', 'listbox2'); %lst_with_fncts - listbox with function names
-            contents = cellstr(get(lst_with_fncts,'String'));%all names of functions from the listbox with functions
-            chosen_fnct = contents{get(lst_with_fncts,'Value')}; %a user chose a function "chosen_fnct" 
+            if (handles.filefound == 1)
+                
+                lst_with_fncts = findobj('Tag', 'listbox2'); %lst_with_fncts - listbox with function names
+                contents = cellstr(get(lst_with_fncts,'String'));%all names of functions from the listbox with functions
+                chosen_fnct = contents{get(lst_with_fncts,'Value')}; %a user chose a function "chosen_fnct" 
 
-            %getting all of values of arguments chosen by a user
-            fieldnms = fieldnames(handles.Args);
+                %getting all of values of arguments chosen by a user
+                fieldnms = fieldnames(handles.Args);
 
-            specific_args = cell(1, size(fieldnms, 1));%specific_args saves arguments' values to pass to a function
-            for i = 1:size(fieldnms, 1)
-                field_i = fieldnms(i); %field_i is a cell 1x1
-                field_i = field_i{1}; %field_i becomes a string
-                args_i = handles.Args.(field_i); %get all args from the i-field
-                j = get(handles.lst_with_args(i),'Value');
-                temp = args_i{j}(2); %temp is a cell 1x1
-                specific_args{1, i} = temp{1}; %temp{1} is a string   
-            end
+                specific_args = cell(1, size(fieldnms, 1));%specific_args saves arguments' values to pass to a function
+                for i = 1:size(fieldnms, 1)
+                    field_i = fieldnms(i); %field_i is a cell 1x1
+                    field_i = field_i{1}; %field_i becomes a string
+                    args_i = handles.Args.(field_i); %get all args from the i-field
+                    j = get(handles.lst_with_args(i),'Value');
+                    temp = args_i{j}(2); %temp is a cell 1x1
+                    specific_args{1, i} = temp{1}; %temp{1} is a string   
+                end
 
-            %runc the chosen_fnct with arguments from the "Scripts" Folder
-            cd('./Scripts')
-            feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
-            cd('../') %get back to the main folder
-            
-            % add info about the plotted graph to handles.currentgraphs
-            if (isempty(handles.currentgraphs)) % handles.currentgraphs is initialized with empty fields to set the structure of this variable
-                handles.currentgraphs = struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', handles.Args); %this empty line is rewritten
-            else 
-                handles.currentgraphs = [handles.currentgraphs, struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', handles.Args)];
-            end            
-            
-            assignin('base', 'currentgraphs', handles.currentgraphs)
+                %runc the chosen_fnct with arguments from the "Scripts" Folder
+                cd('./Scripts')
+                feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
+                cd('../') %get back to the main folder
 
-            SetAllButtonDownFcn(hObject, handles);
-            guidata(hObject, handles);
+                % add info about the plotted graph to handles.currentgraphs
+                if (isempty(handles.currentgraphs)) % handles.currentgraphs is initialized with empty fields to set the structure of this variable
+                    handles.currentgraphs = struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', handles.Args); %this empty line is rewritten
+                else 
+                    handles.currentgraphs = [handles.currentgraphs, struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', handles.Args)];
+                end            
+
+                assignin('base', 'currentgraphs', handles.currentgraphs)
+
+                SetAllButtonDownFcn(hObject, handles);
+                
+                guidata(hObject, handles);
+                
+            else
+                Sysmessage('There are no files of necessary type for the chosen date'); %send message to the Sysmessage edit box
+            end    
         else   
             Sysmessage (handles.Sysmesnofiles)
         end
@@ -660,11 +670,11 @@ function save_as_pic_button_Callback(hObject, eventdata, handles)
 end
 
 %"Date" editbox 
-function edit5_Callback(hObject, eventdata, handles)  
+function date_editbox_Callback(hObject, eventdata, handles)  
 
     %checking the format, it should be like '21-Mar-2017'
     format = '[0-3]\d-(Jan|Feb|Mar|...|Dec)-\d\d\d\d';
-    str = get(findobj('Tag', 'edit5'), 'String'); %String in edit5(date_editbox)
+    str = get(findobj('Tag', 'date_editbox'), 'String'); %String in date_editbox
     if (~isempty(regexp(str,format, 'once')))
         listbox2_Callback(findobj('Tag', 'listbox2'), eventdata, handles);       
     else
@@ -675,7 +685,7 @@ end
 
 
 % --- Executes during object creation, after setting all properties.
-function edit5_CreateFcn(hObject, eventdata, handles)
+function date_editbox_CreateFcn(hObject, eventdata, handles)
 
     if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
         set(hObject,'BackgroundColor','white');
@@ -684,20 +694,20 @@ function edit5_CreateFcn(hObject, eventdata, handles)
 end
 
 
-% --- Executes on button press in pushbutton9.
-function pushbutton9_Callback(hObject, eventdata, handles)
+% --- Executes on button press in calendarbutton.
+function calendarbutton_Callback(hObject, eventdata, handles)
 
     h = uicalendar('Weekend',  [1 0 0 0 0 0 1], ...
                       'InitDate', datetime('1-Oct-2014'), ...  
-                      'DestinationUI', findobj('Tag', 'edit5'));
+                      'DestinationUI', findobj('Tag', 'date_editbox'));
     uiwait(h);
-    edit5_Callback(findobj('Tag', 'edit5'), eventdata, handles);
+    date_editbox_Callback(findobj('Tag', 'date_editbox'), eventdata, handles);
     
 end
 
 
 % --- Executes during object creation, after setting all properties.
-function pushbutton9_CreateFcn(hObject, eventdata, handles)
+function calendarbutton_CreateFcn(hObject, eventdata, handles)
     hObject.CData = imread('calendar.png');
 end
 
