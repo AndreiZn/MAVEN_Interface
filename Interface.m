@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 02-Apr-2017 21:52:10
+    % Last Modified by GUIDE v2.5 03-Apr-2017 16:06:43
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -85,7 +85,12 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     
     % initial y-distance between axes:
     ax1Pos = get(handles.axes1, 'Position'); ax2Pos = get(handles.axes2, 'Position'); height = ax2Pos(4);    
-    handles.init_delta_y = ax1Pos(2) - ax2Pos(2) - height; %y difference between the top of axis2 and the bottom of ax1 
+    handles.init_delta_y = ax1Pos(2) - ax2Pos(2) - height; %y difference between the top of axis2 and the bottom of ax1
+    
+    % delta-y fig_pos and starting)size_of_nale
+    static_pos = get(handles.static_panel, 'Position'); static_pos = static_pos(4);
+    scrollin_pos = get(handles.scrolling_panel, 'Position'); scrolling_pos = scrollin_pos(4);
+    handles.delta_panels =  static_pos - scrolling_pos;
     
     % Mass handle:
     handles.masstype = 1; 
@@ -362,14 +367,14 @@ end
 function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
     
     %Pointer Position
-    %handles.scrolling_panel_pos = get(handles.scrolling_panel, 'Position');
-    %displ = handles.scrolling_panel_pos(2) - handles.starting_size_of_panel(2); %displacement
+    handles.scrolling_panel_pos = get(handles.scrolling_panel, 'Position');
+    displ = handles.scrolling_panel_pos(4) - handles.starting_size_of_panel(4); %displacement
     %newPos = get(gcf,'CurrentPoint') + displ;
     newPos = get(gcf,'CurrentPoint');
     posDiff = newPos - handles.orPos;
     handles.orPos = newPos; 
     p_x = newPos(1);
-    p_y = newPos(2);
+    p_y = newPos(2) + displ*get(findobj('Tag', 'panel_slider'), 'Value');
     
     if (handles.ignoresize_changing == 0)
         
@@ -947,7 +952,7 @@ function [res] = height_of_axes(axes)
 end
 
 % --- Executes on slider movement.
-function slider4_Callback(hObject, eventdata, handles)
+function panel_slider_Callback(hObject, eventdata, handles)
 
     %Get slider's position 
     sl_pos = get(hObject, 'Value'); 
@@ -955,8 +960,8 @@ function slider4_Callback(hObject, eventdata, handles)
     panel_pos = get(handles.scrolling_panel, 'Position'); 
     %Get static_panel position
     fig_pos = get(handles.static_panel, 'Position'); 
-     
-    max_pos = fig_pos - handles.starting_size_of_panel;
+    
+    max_pos = fig_pos - handles.starting_size_of_panel - handles.delta_panels;
     max_pos = max_pos(4);
     set(handles.scrolling_panel, 'Position', [panel_pos(1), max_pos*(1-sl_pos), panel_pos(3), panel_pos(4)]);
     
@@ -965,7 +970,7 @@ function slider4_Callback(hObject, eventdata, handles)
 end
 
 % --- Executes during object creation, after setting all properties.
-function slider4_CreateFcn(hObject, eventdata, handles)
+function panel_slider_CreateFcn(hObject, eventdata, handles)
 
     if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
         set(hObject,'BackgroundColor',[.9 .9 .9]);
@@ -1041,8 +1046,8 @@ function NewAxis_Callback(hObject, eventdata, handles)
     handles.axesav{numofax + 1} = handles.(tag); 
     
     % Move the slider up
-    set(findobj('Tag', 'slider4'), 'Value', 1)
-    slider4_Callback(findobj('Tag', 'slider4'), eventdata, handles)
+    set(findobj('Tag', 'panel_slider'), 'Value', 1)
+    panel_slider_Callback(findobj('Tag', 'panel_slider'), eventdata, handles)
     
     SetAllButtonDownFcn(hObject, handles); % So that axes can be moved
     
