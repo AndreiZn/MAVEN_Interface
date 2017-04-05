@@ -393,14 +393,20 @@ function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
             delta_y = 1;
 
             % border conditions
-            left_border = (p_x>ax_x+0.5*delta_x)&&(p_x<ax_x+delta_x);
-            right_border = (p_x>ax_x+ax_width+0.5*delta_x)&&(p_x<ax_x+ax_width+delta_x);
-            bottom_border = (p_y>ax_y+0.5*delta_y)&&(p_y<ax_y+delta_y);
-            top_border = (p_y>ax_y+ax_height+0.5*delta_y)&&(p_y<ax_y+ax_height+delta_y);
+            % real border:
+            min_left = p_x>ax_x+0.65*delta_x; 
+            max_right = p_x<ax_x+ax_width+1.1*delta_x;
+            min_bottom = p_y>ax_y+0.28*delta_y;
+            max_top = p_y<ax_y+ax_height+0.6*delta_y;
+            % make the border a bit thicker than one pixel for convinience:
+            left_border = (min_left)&&(p_x<ax_x+1.4*delta_x);
+            right_border = (p_x>ax_x+ax_width)&&(max_right);
+            bottom_border = (min_bottom)&&(p_y<ax_y+delta_y);
+            top_border = (p_y>ax_y+ax_height-0.2*delta_y)&&(max_top);
 
             % additional conditions
-            between_lr = (p_x>ax_x)&&(p_x<ax_x+ax_width+delta_x);
-            between_ud = (p_y>ax_y-0.5*delta_y)&&(p_y<ax_y+ax_height+2*delta_y);
+            between_lr = (min_left)&&(max_right);
+            between_ud = (min_bottom)&&(max_top);
 
             % Set handles.border. 1 if it's a border, 0 if it's not.
             if (right_border||left_border||bottom_border||top_border)&&(between_lr&&between_ud)
