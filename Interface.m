@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 02-Apr-2017 16:19:41
+    % Last Modified by GUIDE v2.5 03-Apr-2017 16:06:43
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -71,13 +71,30 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.slider_leftend = datenum(handles.starttime); handles.slider_rightend = datenum(handles.stoptime);
     handles.leftsliderflag = 0; handles.rightsliderflag = 0;
     
-    %Handles needed to drag and drop objects:
+    % Handles needed for drag and drop objects:
     handles.dragging = [];
-    handles.orPos = [];
+    handles.orPos = [0 0];
     
-    %Mass handle:
+    % Handles related to size changing of axes:
+    handles.border = 0; %==1 when CurrentPoint == border of some axis
+    handles.ignoredragging = 0; %if it equals 1, axes shouldn't be moved
+    handles.ignoresize_changing = 0; %if it equals 1, axes' sizes are not changing
+    handles.once = struct('left', 0, 'right', 0, 'top', 0, 'bottom', 0, ... 
+                          'topl', 0, 'topr', 0, 'botl', 0, 'botr', 0); % if handles.once.left equals 1, 
+                         % then currently we are changing the left border position
+    
+    % initial y-distance between axes:
+    ax1Pos = get(handles.axes1, 'Position'); ax2Pos = get(handles.axes2, 'Position'); height = ax2Pos(4);    
+    handles.init_delta_y = ax1Pos(2) - ax2Pos(2) - height; %y difference between the top of axis2 and the bottom of ax1
+    
+    % delta-y fig_pos and starting)size_of_nale
+    static_pos = get(handles.static_panel, 'Position'); static_pos = static_pos(4);
+    scrollin_pos = get(handles.scrolling_panel, 'Position'); scrolling_pos = scrollin_pos(4);
+    handles.delta_panels =  static_pos - scrolling_pos;
+    
+    % Mass handle:
     handles.masstype = 1; 
-    %Masstypes: 1 - 1a.u. 
+    % Masstypes: 1 - 1a.u. 
     %           2 - 4a.u.
     %           3 - 12a.u.
     %           4 - 16a.u.
@@ -294,15 +311,27 @@ function axes_ButtonDownFcn(hObject, eventdata)
     handles = guidata(hObject);
     % What is being dragged
     handles.dragging = hObject;
+    %handles.scrolling_panel_pos = get(handles.scrolling_panel, 'Position');
+    %displ = handles.scrolling_panel_pos(2) - handles.starting_size_of_panel(2); %displacement
+    %handles.orPos = get(gcf,'CurrentPoint') + displ;
     handles.orPos = get(gcf,'CurrentPoint');
     
-    % handles.currentaxes is passed to plots
-    handles.currentaxes = hObject;
-    handles.axeschosen = 1; 
+    if (handles.border==0)&&(handles.ignoredragging==0)
+        % handles.currentaxes is passed to plots
+        handles.currentaxes = hObject;
+        handles.axeschosen = 1; 
+
+        % Colors of all axes should be white, except for the current axis 
+        SetAxesColors(handles.axesav, handles.currentaxes)
+        set(hObject, 'Color', [1 0.97 0.92])
+        
+        % ignore size changing
+        handles.ignoresize_changing = 1;
+    end
     
-    % Colors of all axes should be white, except for the current axis 
-    SetAxesColors(handles.axesav, handles.currentaxes)
-    set(hObject, 'Color', [1 0.97 0.92])
+    if (handles.border==1)&&(handles.ignoresize_changing==0)
+        handles.ignoredragging = 1; %ignore dragging; now, dragging may take effect only after ButtonUpFnc 
+    end
     
     guidata(hObject, handles);
     
@@ -322,27 +351,134 @@ end
 % --- Executes on mouse press over figure background, over a disabled or
 % --- inactive control, or over an axes background.
 function figure1_WindowButtonUpFcn(hObject, eventdata, handles)
-
-    if ~isempty(handles.dragging)
-            newPos = get(gcf,'CurrentPoint');
-            posDiff = newPos - handles.orPos;
-            set(handles.dragging,'Position',get(handles.dragging,'Position') + [posDiff(1:2) 0 0]);
-            handles.dragging = [];
-    end
     
+    handles.dragging = [];
+    handles.ignoresize_changing = 0; % sizes of axes can be changed again
+    handles.ignoredragging = 0; % axes can be dragged again
+    handles.once = struct('left', 0, 'right', 0, 'top', 0, 'bottom', 0, ... 
+                          'topl', 0, 'topr', 0, 'botl', 0, 'botr', 0); % if handles.once.left equals 1, 
+                         % then currently we are changing the left border position
+                         
     guidata(hObject, handles);
     
 end
 
 % --- Executes on mouse motion over figure - except title and menu.
 function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
+    
+    %Pointer Position
+    handles.scrolling_panel_pos = get(handles.scrolling_panel, 'Position');
+    displ = handles.scrolling_panel_pos(4) - handles.starting_size_of_panel(4); %displacement
+    %newPos = get(gcf,'CurrentPoint') + displ;
+    newPos = get(gcf,'CurrentPoint');
+    posDiff = newPos - handles.orPos;
+    handles.orPos = newPos; 
+    p_x = newPos(1);
+    p_y = newPos(2) + displ*get(findobj('Tag', 'panel_slider'), 'Value');
+    
+    if (handles.ignoresize_changing == 0)
+        
+        for ind=1:numel(handles.axesav)
+            % Axis position
+            ax_pos = get(handles.axesav{ind}, 'Position');
+            ax_x = ax_pos(1);
+            ax_y = ax_pos(2);
+            ax_width = ax_pos(3);
+            ax_height = ax_pos(4);
 
-    if ~isempty(handles.dragging)
-        newPos = get(gcf,'CurrentPoint');
-        posDiff = newPos - handles.orPos;
-        handles.orPos = newPos;
-        set(handles.dragging,'Position',get(handles.dragging,'Position') + [posDiff(1:2) 0 0]);
+            % Pointer changes from 'arrow' to 'top' or 'left' if p_x and p_y ==
+            % or close to ax_width or ax_height. So they belong to some range,
+            % which is determined by delta_x and delta_y:
+            delta_x = 2.5;
+            delta_y = 1;
+
+            % border conditions
+            % real border:
+            min_left = p_x>ax_x+0.65*delta_x; 
+            max_right = p_x<ax_x+ax_width+1.1*delta_x;
+            min_bottom = p_y>ax_y+0.28*delta_y;
+            max_top = p_y<ax_y+ax_height+0.6*delta_y;
+            % make the border a bit thicker than one pixel for convinience:
+            left_border = (min_left)&&(p_x<ax_x+1.4*delta_x);
+            right_border = (p_x>ax_x+ax_width)&&(max_right);
+            bottom_border = (min_bottom)&&(p_y<ax_y+delta_y);
+            top_border = (p_y>ax_y+ax_height-0.2*delta_y)&&(max_top);
+
+            % additional conditions
+            between_lr = (min_left)&&(max_right);
+            between_ud = (min_bottom)&&(max_top);
+
+            % Set handles.border. 1 if it's a border, 0 if it's not.
+            if (right_border||left_border||bottom_border||top_border)&&(between_lr&&between_ud)
+                handles.border = 1;
+                break %if it's true for at least one axes, break
+            else
+                handles.border = 0;
+                set(gcf, 'Pointer', 'arrow')
+            end
+        end
+
+        % Set the Pointer to 'top', 'left', etc., if CurrentPoint is a border
+        if ((left_border&&(~right_border)&&(~top_border)&&(~bottom_border)&&between_ud) || handles.once.left == 1)
+            set(gcf, 'Pointer', 'left')            
+            if ~isempty(handles.dragging)
+                handles.once.left = 1;
+                set(handles.dragging, 'Position', get(handles.dragging,'Position') + [posDiff(1) 0 -posDiff(1) 0]);
+            end    
+        elseif ((right_border&&(~left_border)&&(~top_border)&&(~bottom_border)&&between_ud) || (handles.once.right == 1))
+            set(gcf, 'Pointer', 'right')            
+            if ~isempty(handles.dragging)
+                handles.once.right = 1;
+                set(handles.dragging, 'Position', get(handles.dragging,'Position') + [0 0 posDiff(1) 0]);
+            end        
+        elseif (top_border&&(~left_border)&&(~right_border)&&(~bottom_border)&&between_lr) || (handles.once.top == 1)
+            set(gcf, 'Pointer', 'top')            
+            if ~isempty(handles.dragging)
+                handles.once.top = 1;
+                set(handles.dragging, 'Position', get(handles.dragging,'Position') + [0 0 0 posDiff(2)]);
+            end
+        elseif (bottom_border&&(~left_border)&&(~right_border)&&(~top_border)&&between_lr) || (handles.once.bottom == 1)
+            set(gcf, 'Pointer', 'bottom')            
+            if ~isempty(handles.dragging)
+                handles.once.bottom = 1;
+                set(handles.dragging, 'Position', get(handles.dragging,'Position') + [0 posDiff(2) 0 -posDiff(2)]);
+            end
+        end
+
+        % Set the Pointer to 'topl' or 'topr', if CurrentPoint is a corner
+        if (right_border&&top_border) || (handles.once.topr == 1)
+            set(gcf, 'Pointer', 'topr')            
+            if ~isempty(handles.dragging)
+                handles.once.topr = 1;
+                set(handles.dragging, 'Position', get(handles.dragging,'Position') + [0 0 posDiff(1) posDiff(2)]);
+            end
+        elseif (left_border&&bottom_border) || (handles.once.botl == 1)
+            set(gcf, 'Pointer', 'botl')
+            if ~isempty(handles.dragging)
+                handles.once.botl = 1;
+                set(handles.dragging, 'Position', get(handles.dragging,'Position') + [posDiff(1) posDiff(2) -posDiff(1) -posDiff(2)]);
+            end
+        elseif (left_border&&top_border) || (handles.once.topl == 1)
+            set(gcf, 'Pointer', 'topl')
+            if ~isempty(handles.dragging)
+                handles.once.topl = 1;
+                set(handles.dragging, 'Position', get(handles.dragging,'Position') + [posDiff(1) 0 -posDiff(1) posDiff(2)]);
+            end
+        elseif (right_border&&bottom_border) || (handles.once.botr == 1) 
+            set(gcf, 'Pointer', 'botr')
+            if ~isempty(handles.dragging)
+                handles.once.botr = 1;
+                set(handles.dragging, 'Position', get(handles.dragging,'Position') + [0 posDiff(2) posDiff(1) -posDiff(2)]);
+            end
+        end                 
     end
+    
+    % Dragging
+    if (~isempty(handles.dragging))&&(handles.border == 0)&&(handles.ignoredragging==0)
+        set(handles.dragging, 'Position', get(handles.dragging,'Position') + [posDiff(1:2) 0 0]);
+    end
+    
+    SetAllButtonDownFcn(hObject, handles);
     
     guidata(hObject, handles);
     
@@ -352,7 +488,7 @@ end
 % currentaxis becomes []
 function scrolling_panel_ButtonDownFcn(hObject, eventdata, handles)
     
-    handles = guidata(hObject);
+    handles = guidata(hObject);    
     handles.currentaxes = [];
     handles.axeschosen = 0;
     SetAxesColors(handles.axesav, handles.currentaxes)
@@ -822,7 +958,7 @@ function [res] = height_of_axes(axes)
 end
 
 % --- Executes on slider movement.
-function slider4_Callback(hObject, eventdata, handles)
+function panel_slider_Callback(hObject, eventdata, handles)
 
     %Get slider's position 
     sl_pos = get(hObject, 'Value'); 
@@ -830,8 +966,8 @@ function slider4_Callback(hObject, eventdata, handles)
     panel_pos = get(handles.scrolling_panel, 'Position'); 
     %Get static_panel position
     fig_pos = get(handles.static_panel, 'Position'); 
-     
-    max_pos = fig_pos - handles.starting_size_of_panel;
+    
+    max_pos = fig_pos - handles.starting_size_of_panel - handles.delta_panels;
     max_pos = max_pos(4);
     set(handles.scrolling_panel, 'Position', [panel_pos(1), max_pos*(1-sl_pos), panel_pos(3), panel_pos(4)]);
     
@@ -840,7 +976,7 @@ function slider4_Callback(hObject, eventdata, handles)
 end
 
 % --- Executes during object creation, after setting all properties.
-function slider4_CreateFcn(hObject, eventdata, handles)
+function panel_slider_CreateFcn(hObject, eventdata, handles)
 
     if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
         set(hObject,'BackgroundColor',[.9 .9 .9]);
@@ -887,8 +1023,11 @@ function NewAxis_Callback(hObject, eventdata, handles)
     h_ax = highest_axes(handles.axesav);
     highest_pos = get(h_ax, 'Position'); % its position
     
-    % space for new axes = y-size of the highestaxes:
-    delta_y = highest_pos(4);
+    % space for new axes = y-size of the highestaxes + initial distance between axes:
+    delta_y = highest_pos(4)+handles.init_delta_y;
+    
+    % initial scrolling panel position
+    handles.scrolling_panel_init = get (handles.scrolling_panel, 'Position');
     
     % Change the size and position of panels with axes
     fig_pos(4) = fig_pos(4) + delta_y;
@@ -907,13 +1046,14 @@ function NewAxis_Callback(hObject, eventdata, handles)
     new_ax_pos = highest_pos; 
     new_ax_pos(2) = new_ax_pos(2) + delta_y;
     handles.(tag) = axes(handles.scrolling_panel, 'Units', 'characters', 'ActivePositionProperty', 'position', 'Position', new_ax_pos);
+    set (handles.(tag), 'XTick', [], 'Ytick', [])
     
     % add a new axes to axesavailable
     handles.axesav{numofax + 1} = handles.(tag); 
     
     % Move the slider up
-    set(findobj('Tag', 'slider4'), 'Value', 1)
-    slider4_Callback(findobj('Tag', 'slider4'), eventdata, handles)
+    set(findobj('Tag', 'panel_slider'), 'Value', 1)
+    panel_slider_Callback(findobj('Tag', 'panel_slider'), eventdata, handles)
     
     SetAllButtonDownFcn(hObject, handles); % So that axes can be moved
     
