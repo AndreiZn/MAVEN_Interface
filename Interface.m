@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 03-Apr-2017 16:06:43
+    % Last Modified by GUIDE v2.5 06-Apr-2017 18:11:08
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -122,8 +122,6 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     %This is for MassSpectrum
     handles.timecorrectness = 0; % = 1 if massspectime has the following format: 'HH:MM:SS' 
     handles.massspcparam = 0; %linear scale for the mass spectrum 
-    
-    axes(handles.axes1);
     
     SetAllButtonDownFcn(hObject, handles);
     
@@ -304,6 +302,11 @@ function SetAllButtonDownFcn (hObject, handles)
         set (handles.axesav{ind_sabdf}, 'ButtonDownFcn',@axes_ButtonDownFcn);
     end
     
+end
+
+function surface_ButtonDownFcn(hObject, eventdata, handles)
+    %h = get (hObject, 'Parent');
+    %axes_ButtonDownFnc(h, eventdata)
 end
 
 function axes_ButtonDownFcn(hObject, eventdata)
@@ -926,24 +929,6 @@ function Sysmessage_CreateFcn(hObject, eventdata, handles)
 
 end
 
-% --- Executes on button press in savebutton.
-function savebutton_Callback(hObject, eventdata, handles)
-    [FileName, FilePath] = uiputfile({'*.fig'}, 'Save as', './Projects/NewProject');
-    savefig([FilePath, FileName])    
-end
-
-% --- Executes on button press in openprjbutton.
-function openprjbutton_Callback(hObject, eventdata, handles)
-
-    delete(handles.figure1)
-    uiopen(['./Projects','figure'])
-
-end
-
-% --- Executes on button press in newwindowbutton.
-function newwindowbutton_Callback(hObject, eventdata, handles)
-    Interface
-end
 
 %function returns sum of heights of axes
 function [res] = height_of_axes(axes)
@@ -1059,4 +1044,36 @@ function NewAxis_Callback(hObject, eventdata, handles)
     
     guidata(hObject, handles);
     
+end
+
+function uitoggletool2_ClickedCallback(hObject, eventdata, handles)
+end
+
+% --------------------------------------------------------------------
+function New_Project_Callback(hObject, eventdata, handles)
+    Interface
+end
+
+% --------------------------------------------------------------------
+function Open_Project_Callback(hObject, eventdata, handles)
+    
+    Save_Project_Callback(hObject, eventdata, handles)
+    delete(handles.figure1)
+    uiopen(['./Projects','figure'])
+    
+end
+
+% --------------------------------------------------------------------
+function Save_Project_Callback(hObject, eventdata, handles)
+
+    [FileName, FilePath] = uiputfile({'*.fig'}, 'Save as', './Projects/NewProject');
+    
+    if ~isequal(FileName, 0)
+        savefig([FilePath, FileName])   
+    end
+    
+end
+
+% --------------------------------------------------------------------
+function Menu_Project_Callback(hObject, eventdata, handles)
 end
