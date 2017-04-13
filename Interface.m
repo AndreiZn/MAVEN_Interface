@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 06-Apr-2017 18:11:08
+    % Last Modified by GUIDE v2.5 06-Apr-2017 18:34:37
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -51,18 +51,16 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
     % varargin   command line arguments to Interface (see VARARGIN)
-    
+     
     handles = guidata(hObject);
     
-    %Files and times:    
+%Files and times:    
     handles.filename = '';
     handles.filefound = 0; %1 if a file of a necessary type and date was found
     handles.starttime = get(findobj('Tag', 'start_editbox'), 'String');
     handles.stoptime = get(findobj('Tag', 'stop_editbox'), 'String');
     
     %Current Axes:
-    handles.currentaxes = handles.axes1;
-    handles.axeschosen = 1;
     handles.currentaxes = [];
     handles.axeschosen = 0;
     handles.Sysmesnoaxes = 'Please choose an axis _';
@@ -146,7 +144,7 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     %Opening a folder with all files. If you don't add guidata here,
     %Interface will display an error when moving a mouse.
     handles.filefolderpath = uigetdir('', 'Choose a folder with files');
-    assignin('base', 'num', handles.filefolderpath)
+
     if (~isequal(handles.filefolderpath, 0))
         handles.filefolderchosen = 1;
         Sysmessage(['The folder "', handles.filefolderpath, '" was chosen'])
@@ -169,10 +167,6 @@ function varargout = Interface_OutputFcn(hObject, eventdata, handles)
 
     % Get default command line output from handles structure
     varargout{1} = handles.output;
-end
-
-% --- Executes during object creation, after setting all properties.
-function axes1_CreateFcn(hObject, eventdata, handles)
 end
 
 % Start_time editbox
@@ -1045,6 +1039,31 @@ function NewAxis_Callback(hObject, eventdata, handles)
     guidata(hObject, handles);
     
 end
+
+% --- Executes on button press in DeleteAxis.
+function DeleteAxis_Callback(hObject, eventdata, handles)
+    
+    if (~isempty(handles.currentaxes))
+        j = 0;
+        num = numel(handles.axesav);
+        temp = cell(1, num-1); % this cell will collect all axes except for the deleted one
+
+        % {axes1, axes2, axes3} -> {axes1, axes3} if current.axis == axes2
+        for i=1:num
+            if ~isequal(handles.currentaxes, handles.axesav{i})
+                j = j + 1;
+                temp{j} = handles.axesav{i};
+            end    
+        end    
+        handles.axesav = temp;
+
+        delete(handles.currentaxes) % delete the actual axis
+
+        guidata(hObject, handles);
+    end
+    
+end
+
 
 function uitoggletool2_ClickedCallback(hObject, eventdata, handles)
 end
