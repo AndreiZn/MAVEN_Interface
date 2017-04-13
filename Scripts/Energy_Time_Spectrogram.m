@@ -1,10 +1,14 @@
 function Energy_Time_Spectrogram(ax, start_time, stop_time, filename, specific_args)
     
+    mass = specific_args{1, 1}; 
+    log = specific_args{1, 2};
+    
     eflux = spdfcdfread(filename, 'variables', 'eflux');
     nenergy = spdfcdfread(filename, 'variables', 'nenergy');
     energy = spdfcdfread(filename, 'variables', 'energy');
     swp_ind = spdfcdfread(filename, 'variables', 'swp_ind');
     epoch = spdfcdfread(filename, 'variables', 'epoch');
+    mass_arr = spdfcdfread(filename, 'variables', 'mass_arr');
     
     start_str = start_time; stop_str = stop_time; %save str version of start, stop times
     %time 
@@ -14,7 +18,14 @@ function Energy_Time_Spectrogram(ax, start_time, stop_time, filename, specific_a
     stop_time = find (difference == min(difference), 1);
     
     tft = [start_time stop_time];
-    eflux_disp = squeeze(sum(eflux(:, :, tft(1):tft(2)), 1));
+    
+    if mass == 0 %then it's a cumulative spectrogram
+        eflux_disp = squeeze(sum(eflux(:, :, tft(1):tft(2)), 1));
+    else
+        d_mass = 1; %a.u. (accuracy)
+        mass_num_range = find((mass_arr(16, swp_ind(tft(1))+1, :)>mass-d_mass)&(mass_arr(16, swp_ind(tft(1))+1, :)<mass+d_mass));
+        eflux_disp = squeeze(sum(eflux(mass_num_range, :, tft(1):tft(2)), 1));
+    end    
     
     axes(ax);
     
@@ -25,9 +36,34 @@ function Energy_Time_Spectrogram(ax, start_time, stop_time, filename, specific_a
     
     shading flat
     grid on
-    set (gca, 'YScale', 'log', 'tickdir', 'out', 'ticklength', [0.003 0.1], 'fontsize', 7);
+    if log == 1
+        set (gca, 'YScale', 'log')
+    end
+    set(gca, 'tickdir', 'out', 'ticklength', [0.003 0.1], 'fontsize', 7);    
     ylabel('Energy', 'fontsize', 8)
     datetick('x', 'HH:MM:SS')
+    
+    bar_handle = colorbar;
+    labels = get(bar_handle, 'yticklabel');
+    barlabels = cell(size(labels, 1), 1);
+    for i=1:size(labels, 1)
+        barlabels{i} = ['10^{', labels{i}, '}'];
+    end
+    set(bar_handle, 'yticklabel', char(barlabels), 'FontWeight', 'bold', 'fontsize', 7)
+    ylabel(bar_handle, 'Differential energy flux') 
+       
+    %title
+    if mass == 0
+        ttl = 'Cumulative spectrogram, ';
+    else    
+        ttl = ['Mass = ', num2str(mass),'a.u., '];
+    end    
+    if log == 1
+        ttl = [ttl, 'LogScale=on'];
+    else
+        ttl = [ttl, 'LogScale=off'];
+    end
+    title(ttl, 'FontWeight', 'bold', 'fontsize', 7);
     
     %xlim
     averind = round(size(epoch, 1)/2);
