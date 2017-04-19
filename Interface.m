@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 19-Apr-2017 13:12:32
+    % Last Modified by GUIDE v2.5 19-Apr-2017 13:48:43
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -1124,11 +1124,10 @@ function Align_Vertically_Callback(hObject, eventdata, handles)
     
     if ~isempty(h_ax)        
         h_ax_pos = get(h_ax, 'Position'); 
-        h
         for i=1:numel(handles.axesav)
             ax = handles.axesav{i}; % axis that is being aligned
             pos = get(ax, 'Position'); 
-            set(handles.axesav{i}, 'Position', [h_ax_pos(1) pos(2) pos(3) pos(4)])
+            set(ax, 'Position', [h_ax_pos(1) pos(2) pos(3) pos(4)])
         end 
     end
     
@@ -1138,13 +1137,40 @@ end
 % --------------------------------------------------------------------
 function Set_Equal_Width_Callback(hObject, eventdata, handles)
    
-    if ~isempty(handles.currentaxes)
-        ax_pos = get(handles.currentaxes, 'Position');
+    h_ax = handles.currentaxes;
+    
+    if isempty(h_ax)
+        h_ax = highest_axes(handles.axesav); % if current_axis is empty, then h_ax = highest_axis
+    end    
+    
+    if ~isempty(h_ax)
+        h_ax_pos = get(h_ax, 'Position');
         for i=1:numel(handles.axesav)
             ax = handles.axesav{i}; % axis that is being aligned
             pos = get(ax, 'Position'); 
-            set(handles.axesav{i}, 'Position', [pos(1) pos(2) ax_pos(3) pos(4)])
+            set(handles.axesav{i}, 'Position', [pos(1) pos(2) h_ax_pos(3) pos(4)])
         end 
     end 
+    
+end
+
+
+% --------------------------------------------------------------------
+function Set_Width_And_Align_Callback(hObject, eventdata, handles)
+
+    h_ax = handles.currentaxes;
+    
+    if isempty(h_ax)
+        h_ax = highest_axes(handles.axesav); % if current_axis is empty, then h_ax = highest_axis
+    end    
+    
+    if ~isempty(h_ax)
+        h_ax_pos = get(h_ax, 'Position');
+        for i=1:numel(handles.axesav)
+            ax = handles.axesav{i}; % axis that is being aligned
+            pos = get(ax, 'Position'); 
+            set(handles.axesav{i}, 'Position', [h_ax_pos(1) pos(2) h_ax_pos(3) pos(4)])
+        end 
+    end
     
 end
