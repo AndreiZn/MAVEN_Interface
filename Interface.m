@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 06-Apr-2017 18:34:37
+    % Last Modified by GUIDE v2.5 19-Apr-2017 13:12:32
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -54,18 +54,18 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
      
     handles = guidata(hObject);
     
-%Files and times:    
+    % Files and times:    
     handles.filename = '';
     handles.filefound = 0; %1 if a file of a necessary type and date was found
     handles.starttime = get(findobj('Tag', 'start_editbox'), 'String');
     handles.stoptime = get(findobj('Tag', 'stop_editbox'), 'String');
     
-    %Current Axes:
+    % Current Axes:
     handles.currentaxes = [];
     handles.axeschosen = 0;
     handles.Sysmesnoaxes = 'Please choose an axis _';
     
-    %Sliders:
+    % Sliders:
     handles.slider_leftend = datenum(handles.starttime); handles.slider_rightend = datenum(handles.stoptime);
     handles.leftsliderflag = 0; handles.rightsliderflag = 0;
     
@@ -85,6 +85,9 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     ax1Pos = get(handles.axes1, 'Position'); ax2Pos = get(handles.axes2, 'Position'); height = ax2Pos(4);    
     handles.init_delta_y = ax1Pos(2) - ax2Pos(2) - height; %y difference between the top of axis2 and the bottom of ax1
     
+    % initial y-pos of the axis1
+    handles.init_ax1_pos = ax1Pos;
+    
     % delta-y fig_pos and starting)size_of_nale
     static_pos = get(handles.static_panel, 'Position'); static_pos = static_pos(4);
     scrollin_pos = get(handles.scrolling_panel, 'Position'); scrolling_pos = scrollin_pos(4);
@@ -100,10 +103,10 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     %           6 - 38a.u.
     %           7 - 44a.u.
     
-    %To save all information about arguments
+    % To save all information about arguments
     handles.Args = struct();
     
-    %To save all information about plotted graphs and spectrograms
+    % To save all information about plotted graphs and spectrograms
     handles.currentgraphs = [];
     
     % This line is sent to Sysmessages when a user didn't choose a folder
@@ -113,8 +116,7 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     % handles of all axes available
     handles.axesav = {handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.axes5};
     
-    %sum of heights of available axes
-    handles.panelheight = height_of_axes(handles.axesav);
+    % sum of heights of available axes
     handles.starting_size_of_panel = get(handles.scrolling_panel, 'Position');
     
     %This is for MassSpectrum
@@ -923,19 +925,6 @@ function Sysmessage_CreateFcn(hObject, eventdata, handles)
 
 end
 
-
-%function returns sum of heights of axes
-function [res] = height_of_axes(axes)
-
-    res = 0;
-    for ind_hoa=1:size(axes, 2)
-        pos = get (axes{ind_hoa}, 'Position');
-        h = pos(4);
-        res = res + h;
-    end
-    
-end
-
 % --- Executes on slider movement.
 function panel_slider_Callback(hObject, eventdata, handles)
 
@@ -986,7 +975,7 @@ function [ha] = highest_axes(axs)
             end    
         end
     else
-        % to complete
+        ha = '';
     end
     
 end
@@ -1000,7 +989,11 @@ function NewAxis_Callback(hObject, eventdata, handles)
     
     % find the highest axes from currently available ones
     h_ax = highest_axes(handles.axesav);
-    highest_pos = get(h_ax, 'Position'); % its position
+    if ~isempty(h_ax)
+        highest_pos = get(h_ax, 'Position'); % its position
+    else
+        highest_pos = handles.init_ax1_pos;
+    end    
     
     % space for new axes = y-size of the highestaxes + initial distance between axes:
     delta_y = highest_pos(4)+handles.init_delta_y;
@@ -1017,7 +1010,11 @@ function NewAxis_Callback(hObject, eventdata, handles)
     
     % again find the highest axes from currently available ones
     h_ax = highest_axes(handles.axesav);
-    highest_pos = get(h_ax, 'Position'); % its position
+    if ~isempty(h_ax)
+        highest_pos = get(h_ax, 'Position'); % its position
+    else
+        highest_pos = handles.init_ax1_pos;
+    end    
     
     % add a new axes
     numofax = size(handles.axesav, 2); %number of axes available
@@ -1058,7 +1055,10 @@ function DeleteAxis_Callback(hObject, eventdata, handles)
         handles.axesav = temp;
 
         delete(handles.currentaxes) % delete the actual axis
-
+        
+        handles.currentaxes = []; 
+        handles.axeschosen = 0;
+        
         guidata(hObject, handles);
     end
     
@@ -1095,4 +1095,56 @@ end
 
 % --------------------------------------------------------------------
 function Menu_Project_Callback(hObject, eventdata, handles)
+end
+
+
+% --------------------------------------------------------------------
+function Colorbar_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to Colorbar (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+end
+
+
+% --------------------------------------------------------------------
+function Menu_Axes_Callback(hObject, eventdata, handles)
+% hObject    handle to Menu_Axes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+end
+
+% --------------------------------------------------------------------
+function Align_Vertically_Callback(hObject, eventdata, handles)
+    
+    h_ax = handles.currentaxes;
+    
+    if isempty(h_ax)
+        h_ax = highest_axes(handles.axesav); % if current_axis is empty, then h_ax = highest_axis
+    end    
+    
+    if ~isempty(h_ax)        
+        h_ax_pos = get(h_ax, 'Position'); 
+        h
+        for i=1:numel(handles.axesav)
+            ax = handles.axesav{i}; % axis that is being aligned
+            pos = get(ax, 'Position'); 
+            set(handles.axesav{i}, 'Position', [h_ax_pos(1) pos(2) pos(3) pos(4)])
+        end 
+    end
+    
+end
+
+
+% --------------------------------------------------------------------
+function Set_Equal_Width_Callback(hObject, eventdata, handles)
+   
+    if ~isempty(handles.currentaxes)
+        ax_pos = get(handles.currentaxes, 'Position');
+        for i=1:numel(handles.axesav)
+            ax = handles.axesav{i}; % axis that is being aligned
+            pos = get(ax, 'Position'); 
+            set(handles.axesav{i}, 'Position', [pos(1) pos(2) ax_pos(3) pos(4)])
+        end 
+    end 
+    
 end
