@@ -3,7 +3,7 @@ function Magnetic_Field_Slow(ax, start_time, stop_time, filename, specific_args)
     mf_filename = filename;
     mf_data = dlmread(mf_filename, '', 145);
     
-    averind = size(mf_data, 1)/2; 
+    averind = round(size(mf_data, 1)/2); 
     day = [datestr(mf_data(averind,7), 'dd-mmm'), num2str(mf_data(averind, 1))]; 
     timefrom = datenum([day, ' ', start_time]);
     timeto = datenum([day, ' ', stop_time]);
@@ -32,5 +32,5 @@ function Magnetic_Field_Slow(ax, start_time, stop_time, filename, specific_args)
     ylabel('B, nT')
     grid on
     set (ax, 'fontsize', 8);
-    %xlim([datenum([day, ' ', start_time]),datenum([day, ' ', stop_time])])
+%     xlim([datenum(strcat(day, {' '}, start_time)),datenum(strcat(day, {' '}, stop_time))])
     %
