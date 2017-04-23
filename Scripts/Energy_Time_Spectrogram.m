@@ -2,6 +2,8 @@ function Energy_Time_Spectrogram(ax, start_time, stop_time, filename, specific_a
     
     mass = specific_args{1, 1}; 
     log = specific_args{1, 2};
+    colormap_min = str2double(specific_args{1, 4}); %'3'
+    colormap_max = str2double(specific_args{1, 5}); %'8.5'
     
     eflux = spdfcdfread(filename, 'variables', 'eflux');
     nenergy = spdfcdfread(filename, 'variables', 'nenergy');
@@ -30,8 +32,17 @@ function Energy_Time_Spectrogram(ax, start_time, stop_time, filename, specific_a
     axes(ax);
     
     pcolor(repmat(epoch(tft(1):tft(2))', nenergy, 1), energy(:,swp_ind(tft(1):tft(2))+1,1), log10(eflux_disp));
+    
+    % colormap
     verify = eflux_disp~=0;
-    colordata = [min(min(log10(eflux_disp(verify)))), max(max(log10(eflux_disp(verify))))];
+    if isnan(colormap_min)
+        colormap_min = min(min(log10(eflux_disp(verify)))); 
+    end
+    if isnan(colormap_max)
+        colormap_max = max(max(log10(eflux_disp(verify)))); 
+    end
+    colordata = [colormap_min colormap_max];
+    
     caxis(colordata)
     
     shading flat
