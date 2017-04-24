@@ -26,7 +26,7 @@ function NumberDensity_Time(ax, start_time, stop_time, filename, specific_args) 
     
     q = 1.602177335e-19;
     aem = 1.66054021010e-27;
-
+    
     choose_ind = find(epoch>=timefrom & epoch<=timeto);
     epoch = epoch(choose_ind);
     eflux = eflux(:, :, :, choose_ind);
@@ -37,10 +37,14 @@ function NumberDensity_Time(ax, start_time, stop_time, filename, specific_args) 
     m = mass_arr(16, swpind+1, 1, :);
     mass_num_range = find(( m>(mass-d_mass) )&( m<(mass+d_mass) ));
     mass_num = round((mass_num_range(1)+mass_num_range(end))/2);
-    
-    eflux(:, :, mass_num, :) = sum(eflux(:, :, mass_num_range, :), 3);
-    v = 1*sqrt(2*q*energy./(aem*mass_arr));
 
+    eflux(:, :, mass_num, :) = sum(eflux(:, :, mass_num_range, :), 3);
+    %eflux(:,:,:) = squeeze(sum(eflux(:, :, mass_num_range, :), 3));
+    v = 1*sqrt(2*q*energy./(aem*mass_arr));
+    
+    assignin('base', 'efluxafter', eflux)
+    assignin('base', 'mass_arr', mass_arr)
+    
     phsdensity = zeros(size(eflux));
     for i = 1:size(eflux, 4)
         m_sq = aem*permute(squeeze(mass_arr(:, swp_ind(i)+1, :, :)), [2 1 3]);
