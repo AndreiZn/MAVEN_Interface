@@ -2,8 +2,8 @@ function Energy_Time_Spectrogram(ax, start_time, stop_time, filename, specific_a
     
     mass = specific_args{1, 1}; 
     log = specific_args{1, 2};
-    colormap_min = str2double(specific_args{1, 4}); %'3'
-    colormap_max = str2double(specific_args{1, 5}); %'8.5'
+    %colormap_min = str2double(specific_args{1, 4}); %'3'
+    %colormap_max = str2double(specific_args{1, 5}); %'8.5'
     
     eflux = spdfcdfread(filename, 'variables', 'eflux');
     nenergy = spdfcdfread(filename, 'variables', 'nenergy');
@@ -35,12 +35,12 @@ function Energy_Time_Spectrogram(ax, start_time, stop_time, filename, specific_a
     
     % colormap
     verify = eflux_disp~=0;
-    if isnan(colormap_min)
+    %if isnan(colormap_min)
         colormap_min = min(min(log10(eflux_disp(verify)))); 
-    end
-    if isnan(colormap_max)
+    %end
+    %if isnan(colormap_max)
         colormap_max = max(max(log10(eflux_disp(verify)))); 
-    end
+    %end
     colordata = [colormap_min colormap_max];
     
     caxis(colordata)

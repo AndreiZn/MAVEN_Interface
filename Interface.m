@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 19-Apr-2017 13:48:43
+    % Last Modified by GUIDE v2.5 24-Apr-2017 04:49:42
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -116,6 +116,12 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     % handles of all axes available
     handles.axesav = {handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.axes5};
     
+    % uicontexmenu
+    %c = uicontextmenu(handles.figure1);
+    %handles.figure1.UIContextMenu = c;
+    %uicontrol(handles.figure1,'UIContextMenu',c);
+    %uimenu('Parent', c, 'Label', 'first', 'Callback', @Example_Callback)
+    
     % sum of heights of available axes
     handles.starting_size_of_panel = get(handles.scrolling_panel, 'Position');
     
@@ -190,6 +196,7 @@ function start_editbox_Callback(hObject, eventdata, handles)
     
     guidata(hObject, handles);
     
+    listbox2_Callback(findobj('Tag', 'listbox2'), eventdata, handles);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -220,6 +227,7 @@ function stop_editbox_Callback(hObject, eventdata, handles)
     
     guidata(hObject, handles);
     
+    listbox2_Callback(findobj('Tag', 'listbox2'), eventdata, handles);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -735,7 +743,12 @@ function plotbutton_Callback(hObject, eventdata, handles)
                 else 
                     handles.currentgraphs = [handles.currentgraphs, struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', chosen_Args)];
                 end            
-
+                
+                %handles.filefound = 0; % otherwise mistakes are possible, e.g., 
+                % if in *_Args 'File' had been written as 'file', program would have plotted
+                % *.m, but using a wrong file
+                %handles.filename = ''; 
+                
                 assignin('base', 'currentgraphs', handles.currentgraphs)
 
                 SetAllButtonDownFcn(hObject, handles);
@@ -1214,4 +1227,10 @@ function Set_Width_And_Align_Callback(hObject, eventdata, handles)
         end 
     end
     
+end
+
+
+% --------------------------------------------------------------------
+function Axes_Style_Callback(hObject, eventdata, handles)
+    AxesDesign(hObject, handles);
 end
