@@ -22,7 +22,7 @@ function varargout = AxesDesign(varargin)
 
 % Edit the above text to modify the response to help AxesDesign
 
-% Last Modified by GUIDE v2.5 25-Apr-2017 22:32:56
+% Last Modified by GUIDE v2.5 25-Apr-2017 22:56:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,6 +58,8 @@ function AxesDesign_OpeningFcn(hObject, eventdata, handles, varargin)
     xlabel_CreateFcn(findobj('Tag', 'xlabel'), eventdata, handles);
     ylabel_CreateFcn(findobj('Tag', 'ylabel'), eventdata, handles);
     Title_CreateFcn(findobj('Tag', 'Title'), eventdata, handles);
+    y_min_CreateFcn(findobj('Tag', 'y_min'), eventdata, handles);
+    y_max_CreateFcn(findobj('Tag', 'y_max'), eventdata, handles);
     colormap_min_CreateFcn(findobj('Tag', 'colormap_min'), eventdata, handles);
     colormap_max_CreateFcn(findobj('Tag', 'colormap_max'), eventdata, handles);
     % UIWAIT makes AxesDesign wait for user response (see UIRESUME)
@@ -115,7 +117,31 @@ function Title_CreateFcn(hObject, eventdata, handles)
         set(hObject, 'String', ttl_str)
     end
 
-    
+function y_min_Callback(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function y_min_CreateFcn(hObject, eventdata, handles)
+
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+    if ~isempty (handles)
+        ylim = get(handles.Interface_handles.currentaxes, 'ylim');
+        set(hObject, 'String', ylim(1))
+    end
+
+function y_max_Callback(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function y_max_CreateFcn(hObject, eventdata, handles)
+
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end 
+    if ~isempty (handles)
+        ylim = get(handles.Interface_handles.currentaxes, 'ylim');
+        set(hObject, 'String', ylim(2))
+    end
     
 % --- Executes on button press in SetButton.
 function SetButton_Callback(hObject, eventdata, handles)
@@ -128,10 +154,13 @@ function SetButton_Callback(hObject, eventdata, handles)
     xlab = get(handles.xlabel, 'String');
     ylab = get(handles.ylabel, 'String');
     ttl = get(handles.Title, 'String');
-   
+    ylim1 = str2double(get(handles.y_min, 'String'));
+    ylim2 = str2double(get(handles.y_max, 'String'));
+    
     xlabel(xlab)
     ylabel(ylab)
     title(ttl)
+    ylim([ylim1 ylim2])
 
 function colormap_min_Callback(hObject, eventdata, handles)
 
@@ -187,7 +216,6 @@ function Set_Spectrogram_Button_Callback(hObject, eventdata, handles)
     set(bar_handle, 'yticklabel', char(barlabels), 'FontWeight', 'bold', 'fontsize', 7)
     %ylabel(bar_handle, 'Differential energy flux') 
      
-
 
 % --- Executes when user attempts to close figure1 == AxesDesign menu.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)

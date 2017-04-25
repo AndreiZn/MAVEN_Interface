@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 24-Apr-2017 04:49:42
+    % Last Modified by GUIDE v2.5 25-Apr-2017 23:09:26
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -115,12 +115,6 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     
     % handles of all axes available
     handles.axesav = {handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.axes5};
-    
-    % uicontexmenu
-    %c = uicontextmenu(handles.figure1);
-    %handles.figure1.UIContextMenu = c;
-    %uicontrol(handles.figure1,'UIContextMenu',c);
-    %uimenu('Parent', c, 'Label', 'first', 'Callback', @Example_Callback)
     
     % sum of heights of available axes
     handles.starting_size_of_panel = get(handles.scrolling_panel, 'Position');
@@ -1232,7 +1226,16 @@ end
 
 % --------------------------------------------------------------------
 function Axes_Style_Callback(hObject, eventdata, handles)
-    AxesDesign(hObject, handles);
+    handles.AxesDesign = AxesDesign(hObject, handles);
     handles.AxDesignOpen = 1;
     guidata(hObject, handles);
+end
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+    delete(hObject);
+    if handles.AxDesignOpen == 1
+        delete(handles.AxesDesign);
+    end
 end
