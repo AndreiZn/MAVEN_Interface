@@ -125,9 +125,8 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     % sum of heights of available axes
     handles.starting_size_of_panel = get(handles.scrolling_panel, 'Position');
     
-    %This is for MassSpectrum
-    handles.timecorrectness = 0; % = 1 if massspectime has the following format: 'HH:MM:SS' 
-    handles.massspcparam = 0; %linear scale for the mass spectrum 
+    % 0 if AxesDesign menu is not open, 1 when it's open
+    handles.AxDesignOpen = 0;
     
     SetAllButtonDownFcn(hObject, handles);
     
@@ -318,9 +317,6 @@ function axes_ButtonDownFcn(hObject, eventdata)
     handles = guidata(hObject);
     % What is being dragged
     handles.dragging = hObject;
-    %handles.scrolling_panel_pos = get(handles.scrolling_panel, 'Position');
-    %displ = handles.scrolling_panel_pos(2) - handles.starting_size_of_panel(2); %displacement
-    %handles.orPos = get(gcf,'CurrentPoint') + displ;
     handles.orPos = get(gcf,'CurrentPoint');
     
     if (handles.border==0)&&(handles.ignoredragging==0)
@@ -368,6 +364,10 @@ function figure1_WindowButtonUpFcn(hObject, eventdata, handles)
                          
     guidata(hObject, handles);
     
+    % update AxesDesign menu if it was already opened
+    if handles.AxDesignOpen == 1
+        AxesDesign(hObject, handles);
+    end
 end
 
 % --- Executes on mouse motion over figure - except title and menu.
@@ -1233,4 +1233,6 @@ end
 % --------------------------------------------------------------------
 function Axes_Style_Callback(hObject, eventdata, handles)
     AxesDesign(hObject, handles);
+    handles.AxDesignOpen = 1;
+    guidata(hObject, handles);
 end

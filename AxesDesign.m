@@ -22,7 +22,7 @@ function varargout = AxesDesign(varargin)
 
 % Edit the above text to modify the response to help AxesDesign
 
-% Last Modified by GUIDE v2.5 24-Apr-2017 22:21:31
+% Last Modified by GUIDE v2.5 25-Apr-2017 22:32:56
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -47,24 +47,26 @@ end
 % --- Executes just before AxesDesign is made visible.
 function AxesDesign_OpeningFcn(hObject, eventdata, handles, varargin)
 
-handles.Interface_handles = varargin{2};
-assignin('base', 'handlesInt', handles.Interface_handles)
-% Choose default command line output for AxesDesign
-handles.output = hObject;
+    handles.Interface_handles = varargin{2};
 
-% Update handles structure
-guidata(hObject, handles);
+    % Choose default command line output for AxesDesign
+    handles.output = hObject;
 
-% UIWAIT makes AxesDesign wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+    % Update handles structure
+    guidata(hObject, handles);
+
+    xlabel_CreateFcn(findobj('Tag', 'xlabel'), eventdata, handles);
+    ylabel_CreateFcn(findobj('Tag', 'ylabel'), eventdata, handles);
+    Title_CreateFcn(findobj('Tag', 'Title'), eventdata, handles);
+    colormap_min_CreateFcn(findobj('Tag', 'colormap_min'), eventdata, handles);
+    colormap_max_CreateFcn(findobj('Tag', 'colormap_max'), eventdata, handles);
+    % UIWAIT makes AxesDesign wait for user response (see UIRESUME)
+    % uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
 function varargout = AxesDesign_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
@@ -72,73 +74,99 @@ varargout{1} = handles.output;
 
 
 function xlabel_Callback(hObject, eventdata, handles)
-% hObject    handle to xlabel (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of xlabel as text
-%        str2double(get(hObject,'String')) returns contents of xlabel as a double
-
 
 % --- Executes during object creation, after setting all properties.
 function xlabel_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to xlabel (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+    if ~isempty (handles)
+        xlab_text = get(handles.Interface_handles.currentaxes, 'xlabel');
+        xlab_str = get(xlab_text, 'String');
+        set(hObject, 'String', xlab_str)
+    end
 
 function ylabel_Callback(hObject, eventdata, handles)
-% hObject    handle to ylabel (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of ylabel as text
-%        str2double(get(hObject,'String')) returns contents of ylabel as a double
-
 
 % --- Executes during object creation, after setting all properties.
 function ylabel_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ylabel (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+    if ~isempty (handles)
+        ylab_text = get(handles.Interface_handles.currentaxes, 'ylabel');
+        ylab_str = get(ylab_text, 'String');
+        set(hObject, 'String', ylab_str)
+    end
 
+function Title_Callback(hObject, eventdata, handles)
 
+% --- Executes during object creation, after setting all properties.
+function Title_CreateFcn(hObject, eventdata, handles)
+
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+    if ~isempty (handles)
+        ttl_text = get(handles.Interface_handles.currentaxes, 'title');
+        ttl_str = get(ttl_text, 'String');
+        set(hObject, 'String', ttl_str)
+    end
+
+    
+    
 % --- Executes on button press in SetButton.
 function SetButton_Callback(hObject, eventdata, handles)
     
+    cur_ax = handles.Interface_handles.currentaxes; % current axis in Interface
     % set current axis
-    axes(handles.Interface_handles.currentaxes) %current axis in Interface
+    axes(cur_ax) %current axis in Interface
     
     % get all the properties
     xlab = get(handles.xlabel, 'String');
     ylab = get(handles.ylabel, 'String');
     ttl = get(handles.Title, 'String');
-    
-    if ~isequal(xlab, '(default)')
-        xlabel(xlab)
-    end    
-    if ~isequal(ylab, '(default)')
-        ylabel(ylab)
-    end 
-    if ~isequal(ttl, '(default)')
-        title(ttl)
-    end
-    
-    %delete(handles.figure1)
+   
+    xlabel(xlab)
+    ylabel(ylab)
+    title(ttl)
 
+function colormap_min_Callback(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function colormap_min_CreateFcn(hObject, eventdata, handles)
+
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+    set(hObject, 'String', 'not applicable')
+    if ~isempty (handles)       
+        chld = get(handles.Interface_handles.currentaxes, 'Children');
+        if isa(chld, 'matlab.graphics.primitive.Surface')            
+            CLim = get(handles.Interface_handles.currentaxes, 'CLim');
+            set(hObject, 'String', CLim(1))
+        end
+    end
+
+function colormap_max_Callback(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function colormap_max_CreateFcn(hObject, eventdata, handles)
+    
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+    set(hObject, 'String', 'not applicable')
+    if ~isempty (handles)       
+        chld = get(handles.Interface_handles.currentaxes, 'Children');
+        if isa(chld, 'matlab.graphics.primitive.Surface')            
+            CLim = get(handles.Interface_handles.currentaxes, 'CLim');
+            set(hObject, 'String', CLim(2))
+        end
+    end
+          
 % --- Executes on button press in Set_Spectrogram_Button.
 function Set_Spectrogram_Button_Callback(hObject, eventdata, handles)
 
@@ -157,73 +185,15 @@ function Set_Spectrogram_Button_Callback(hObject, eventdata, handles)
         barlabels{i} = ['10^{', labels{i}, '}'];
     end
     set(bar_handle, 'yticklabel', char(barlabels), 'FontWeight', 'bold', 'fontsize', 7)
-    ylabel(bar_handle, 'Differential energy flux') 
+    %ylabel(bar_handle, 'Differential energy flux') 
      
 
 
-function Title_Callback(hObject, eventdata, handles)
-% hObject    handle to Title (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of Title as text
-%        str2double(get(hObject,'String')) returns contents of Title as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function Title_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Title (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function colormap_min_Callback(hObject, eventdata, handles)
-% hObject    handle to colormap_min (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of colormap_min as text
-%        str2double(get(hObject,'String')) returns contents of colormap_min as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function colormap_min_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to colormap_min (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function colormap_max_Callback(hObject, eventdata, handles)
-% hObject    handle to colormap_max (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of colormap_max as text
-%        str2double(get(hObject,'String')) returns contents of colormap_max as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function colormap_max_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to colormap_max (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+% --- Executes when user attempts to close figure1 == AxesDesign menu.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+    
+    handles.Interface_handles.AxDesignOpen = 0; % it means that AxesDesign menu is closed
+    Interface_obj = handles.Interface_handles.figure1; % handle of the main Interface object
+    guidata(Interface_obj, handles.Interface_handles); % update Interface handles
+    guidata(hObject, handles);
+    delete(hObject);
