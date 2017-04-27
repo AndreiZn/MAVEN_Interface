@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 25-Apr-2017 23:09:26
+    % Last Modified by GUIDE v2.5 27-Apr-2017 13:41:03
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -359,7 +359,7 @@ function figure1_WindowButtonUpFcn(hObject, eventdata, handles)
     guidata(hObject, handles);
     
     % update AxesDesign menu if it was already opened
-    if handles.AxDesignOpen == 1
+    if (handles.AxDesignOpen == 1)&&isa(handles.currentaxes, 'matlab.graphics.axis.Axes')
         AxesDesign(hObject, handles);
     end
 end
@@ -370,7 +370,6 @@ function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
     %Pointer Position
     handles.scrolling_panel_pos = get(handles.scrolling_panel, 'Position');
     displ = handles.scrolling_panel_pos(4) - handles.starting_size_of_panel(4); %displacement
-    %newPos = get(gcf,'CurrentPoint') + displ;
     newPos = get(gcf,'CurrentPoint');
     posDiff = newPos - handles.orPos;
     handles.orPos = newPos; 
@@ -408,7 +407,11 @@ function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
             % additional conditions
             between_lr = (min_left)&&(max_right);
             between_ud = (min_bottom)&&(max_top);
-
+            
+            % if the followong is 1 then a user has just started moving the border
+            first_dragging = isequal(handles.once, struct('left', 0, 'right', 0, 'top', 0, 'bottom', 0, ... 
+                                                          'topl', 0, 'topr', 0, 'botl', 0, 'botr', 0));
+                                                
             % Set handles.border. 1 if it's a border, 0 if it's not.
             if (right_border||left_border||bottom_border||top_border)&&(between_lr&&between_ud)
                 handles.border = 1;
@@ -419,26 +422,26 @@ function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
             end
         end
 
-        % Set the Pointer to 'top', 'left', etc., if CurrentPoint is a border
-        if ((left_border&&(~right_border)&&(~top_border)&&(~bottom_border)&&between_ud) || handles.once.left == 1)
+        % Set the Pointer to 'top', 'left', etc., if CurrentPoint is a 'top', 'left, ... border
+        if (first_dragging&&(left_border&&(~right_border)&&(~top_border)&&(~bottom_border)&&between_ud) || handles.once.left == 1)
             set(gcf, 'Pointer', 'left')            
             if ~isempty(handles.dragging)
                 handles.once.left = 1;
                 set(handles.dragging, 'Position', get(handles.dragging,'Position') + [posDiff(1) 0 -posDiff(1) 0]);
             end    
-        elseif ((right_border&&(~left_border)&&(~top_border)&&(~bottom_border)&&between_ud) || (handles.once.right == 1))
+        elseif (first_dragging&&(right_border&&(~left_border)&&(~top_border)&&(~bottom_border)&&between_ud) || (handles.once.right == 1))
             set(gcf, 'Pointer', 'right')            
             if ~isempty(handles.dragging)
                 handles.once.right = 1;
                 set(handles.dragging, 'Position', get(handles.dragging,'Position') + [0 0 posDiff(1) 0]);
             end        
-        elseif (top_border&&(~left_border)&&(~right_border)&&(~bottom_border)&&between_lr) || (handles.once.top == 1)
+        elseif first_dragging&&(top_border&&(~left_border)&&(~right_border)&&(~bottom_border)&&between_lr) || (handles.once.top == 1)
             set(gcf, 'Pointer', 'top')            
             if ~isempty(handles.dragging)
                 handles.once.top = 1;
                 set(handles.dragging, 'Position', get(handles.dragging,'Position') + [0 0 0 posDiff(2)]);
             end
-        elseif (bottom_border&&(~left_border)&&(~right_border)&&(~top_border)&&between_lr) || (handles.once.bottom == 1)
+        elseif first_dragging&&(bottom_border&&(~left_border)&&(~right_border)&&(~top_border)&&between_lr) || (handles.once.bottom == 1)
             set(gcf, 'Pointer', 'bottom')            
             if ~isempty(handles.dragging)
                 handles.once.bottom = 1;
@@ -774,7 +777,7 @@ function rebuild_all_Callback(hObject, eventdata, handles)
                 % get all info about i-currentgraph
                 fnct = handles.currentgraphs(i).Script; 
                 ax = handles.currentgraphs(i).Axes;
-                file = handles.currentgraphs(i).Args.file; %file structure
+                file = handles.currentgraphs(i).Args.File; %file structure
                 filename = file{1,2};
 
                 % get all of values of arguments
