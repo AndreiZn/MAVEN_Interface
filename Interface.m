@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 27-Apr-2017 13:41:03
+    % Last Modified by GUIDE v2.5 27-Apr-2017 18:06:12
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -306,6 +306,17 @@ function surface_ButtonDownFcn(hObject, eventdata, handles)
     %axes_ButtonDownFnc(h, eventdata)
 end
 
+function SetAxesColors (axs, curax)
+
+    for ind_sac=1:numel(axs)
+        a = axs{ind_sac};
+        if (~isequal(a, curax))
+            set (a, 'Color', 'White')
+        end    
+    end 
+    
+end
+
 function axes_ButtonDownFcn(hObject, eventdata)
     
     handles = guidata(hObject);
@@ -334,14 +345,39 @@ function axes_ButtonDownFcn(hObject, eventdata)
     
 end
 
-function SetAxesColors (axs, curax)
+% --- Executes on mouse press over figure background, over a disabled or
+% --- inactive control, or over an axes background.
+function figure1_WindowButtonDownFcn(hObject, eventdata, handles)
 
-    for ind_sac=1:numel(axs)
-        a = axs{ind_sac};
-        if (~isequal(a, curax))
-            set (a, 'Color', 'White')
-        end    
-    end 
+    handles = guidata(hObject);
+    % What is being dragged
+    handles.dragging = get(hObject, 'CurrentObject');
+    
+    % if it's a surface (e.g., spectrogram):
+    if isa(handles.dragging, 'matlab.graphics.primitive.Surface')
+        
+        handles.dragging = get(handles.dragging, 'Parent'); % axes that the surface is built on
+        handles.orPos = get(gcf,'CurrentPoint');
+        
+        if (handles.border==0)&&(handles.ignoredragging==0)
+            % handles.currentaxes is passed to Scripts
+            handles.currentaxes = handles.dragging;
+            handles.axeschosen = 1; 
+
+            % Colors of all axes should be white, except for the current axis 
+            SetAxesColors(handles.axesav, handles.currentaxes)
+            set(handles.dragging, 'Color', [1 0.97 0.92])
+
+            % ignore size changing
+            handles.ignoresize_changing = 1;
+        end
+
+        if (handles.border==1)&&(handles.ignoresize_changing==0)
+            handles.ignoredragging = 1; %ignore dragging; now, dragging may take effect only after ButtonUpFnc 
+        end
+    end    
+    
+    guidata(hObject, handles);
     
 end
 
@@ -408,7 +444,7 @@ function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
             between_lr = (min_left)&&(max_right);
             between_ud = (min_bottom)&&(max_top);
             
-            % if the followong is 1 then a user has just started moving the border
+            % if the following is 1 then a user has just started moving the border
             first_dragging = isequal(handles.once, struct('left', 0, 'right', 0, 'top', 0, 'bottom', 0, ... 
                                                           'topl', 0, 'topr', 0, 'botl', 0, 'botr', 0));
                                                 
@@ -892,7 +928,8 @@ end
 % --- Executes on button press in save_as_pic_button.
 function save_as_pic_button_Callback(hObject, eventdata, handles)
 
-    img = feval('screencapture', handles.figure1, [42 -150 1165 882]);
+    %img = feval('screencapture', handles.figure1, [42 -150 1165 882]);
+    img = feval('screencapture', handles.figure1);
     [FileName, FilePath] = uiputfile({'*.png'}, 'Save as', './ScreenShots/NewShot');  
     cd('./ScreenShots')
     imwrite (img, [FilePath, FileName])
