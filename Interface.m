@@ -764,13 +764,31 @@ function plotbutton_Callback(hObject, eventdata, handles)
                     assignin('base', 'spec_Args', specific_args)
                     assignin('base', 'chosen_Args', chosen_Args)
                 end
-                
-                Sysmessage (['Please wait. "', chosen_fnct, '" is being plotted'])
-                %run the chosen_fnct with arguments from the "Scripts" Folder
-                cd('./Scripts')
-                feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
-                cd('../') %get back to the main folder
-                Sysmessage ([chosen_fnct, ' was successfully plotted _'])
+                 
+                % check whether the current axis is empty or not
+                if ~is_current_ax_empty(handles.currentgraphs, handles.currentaxes)
+                    choice = questdlg('You want to plot another graph on this axis. Please choose one of the options.', 'Plotting options', 'Plot and update y-lim', 'Plot with a secondary axis on the right', 'Remove current graph and plot a new one', 'Plot and update y-lim');
+                    Sysmessage (['Please wait. "', chosen_fnct, '" is being plotted'])     
+                        switch choice
+                            case 'Plot and update y-lim'
+                                hold (handles.currentaxes, 'on')                                
+                            case 'Plot with a secondary axis on the right'
+                                yyaxis (handles.currentaxes, 'right')
+                            case 'Remove current graph and plot a new one'                                      
+                        end
+                        % run the chosen_fnct with arguments from the "Scripts" Folder
+                        cd('./Scripts')
+                        feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
+                        cd('../') % get back to the main folder
+                        hold (handles.currentaxes, 'off') 
+                else
+                    Sysmessage (['Please wait. "', chosen_fnct, '" is being plotted']) 
+                    % run the chosen_fnct with arguments from the "Scripts" Folder
+                    cd('./Scripts')
+                    feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
+                    cd('../') % get back to the main folder
+                end    
+                Sysmessage ([chosen_fnct, ' was successfully plotted _'])             
                 
                 % add info about the plotted graph to handles.currentgraphs
                 if (isempty(handles.currentgraphs)) % handles.currentgraphs is initialized with empty fields to set the structure of this variable
@@ -779,10 +797,10 @@ function plotbutton_Callback(hObject, eventdata, handles)
                     handles.currentgraphs = [handles.currentgraphs, struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', chosen_Args)];
                 end            
                 
-                %handles.filefound = 0; % otherwise mistakes are possible, e.g., 
+                % handles.filefound = 0; % otherwise mistakes are possible, e.g., 
                 % if in *_Args 'File' had been written as 'file', program would have plotted
                 % *.m, but using a wrong file
-                %handles.filename = ''; 
+                % handles.filename = ''; 
                 
                 assignin('base', 'currentgraphs', handles.currentgraphs)
 
@@ -800,6 +818,23 @@ function plotbutton_Callback(hObject, eventdata, handles)
         Sysmessage (handles.Sysmesnoaxes)
     end
     
+end
+
+% check whether the current axis is empty or not
+function [empty] = is_current_ax_empty(graphs, curaxis)
+    
+    empty = true; % empty == True when the current axis is empty
+    if (~isempty(graphs))
+        num = numel(graphs);
+        for i=1:num
+            struct = graphs(i);
+            axs = struct.Axes;
+            if isequal(axs, curaxis)
+                empty = false;
+            end    
+        end   
+    end    
+
 end
 
 % --- Executes on button press in rebuild_all.
