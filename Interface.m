@@ -486,25 +486,25 @@ function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
         end
 
         % Set the Pointer to 'topl' or 'topr', if CurrentPoint is a corner
-        if (right_border&&top_border) || (handles.once.topr == 1)
+        if first_dragging&&(right_border&&top_border) || (handles.once.topr == 1)
             set(gcf, 'Pointer', 'topr')            
             if ~isempty(handles.dragging)
                 handles.once.topr = 1;
                 set(handles.dragging, 'Position', get(handles.dragging,'Position') + [0 0 posDiff(1) posDiff(2)]);
             end
-        elseif (left_border&&bottom_border) || (handles.once.botl == 1)
+        elseif first_dragging&&(left_border&&bottom_border) || (handles.once.botl == 1)
             set(gcf, 'Pointer', 'botl')
             if ~isempty(handles.dragging)
                 handles.once.botl = 1;
                 set(handles.dragging, 'Position', get(handles.dragging,'Position') + [posDiff(1) posDiff(2) -posDiff(1) -posDiff(2)]);
             end
-        elseif (left_border&&top_border) || (handles.once.topl == 1)
+        elseif first_dragging&&(left_border&&top_border) || (handles.once.topl == 1)
             set(gcf, 'Pointer', 'topl')
             if ~isempty(handles.dragging)
                 handles.once.topl = 1;
                 set(handles.dragging, 'Position', get(handles.dragging,'Position') + [posDiff(1) 0 -posDiff(1) posDiff(2)]);
             end
-        elseif (right_border&&bottom_border) || (handles.once.botr == 1) 
+        elseif first_dragging&&(right_border&&bottom_border) || (handles.once.botr == 1) 
             set(gcf, 'Pointer', 'botr')
             if ~isempty(handles.dragging)
                 handles.once.botr = 1;
@@ -1164,9 +1164,16 @@ end
 % --------------------------------------------------------------------
 function Open_Project_Callback(hObject, eventdata, handles)
     
-    Save_Project_Callback(hObject, eventdata, handles)
-    delete(handles.figure1)
-    uiopen(['./Projects','figure'])
+    choice = questdlg('Do you want to save the current project?','Save Project','Yes','No','Yes');
+    switch choice
+        case 'Yes'
+            Save_Project_Callback(hObject, eventdata, handles)
+            delete(handles.figure1)
+            uiopen(['./Projects','figure'])
+        case 'No'
+            delete(handles.figure1)
+            uiopen(['./Projects','figure'])
+    end
     
 end
 
