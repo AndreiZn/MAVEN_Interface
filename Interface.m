@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 27-Apr-2017 18:06:12
+    % Last Modified by GUIDE v2.5 04-May-2017 14:53:00
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -375,6 +375,8 @@ function figure1_WindowButtonDownFcn(hObject, eventdata, handles)
         if (handles.border==1)&&(handles.ignoresize_changing==0)
             handles.ignoredragging = 1; %ignore dragging; now, dragging may take effect only after ButtonUpFnc 
         end
+    else
+        handles.dragging = [];
     end    
     
     guidata(hObject, handles);
@@ -923,7 +925,6 @@ function checkbox2_Callback(hObject, eventdata, handles)
     end    
 end
 
-
 % Save as a picture (screencapture)
 % --- Executes on button press in save_as_pic_button.
 function save_as_pic_button_Callback(hObject, eventdata, handles)
@@ -951,7 +952,6 @@ function date_editbox_Callback(hObject, eventdata, handles)
     
 end
 
-
 % --- Executes during object creation, after setting all properties.
 function date_editbox_CreateFcn(hObject, eventdata, handles)
 
@@ -960,7 +960,6 @@ function date_editbox_CreateFcn(hObject, eventdata, handles)
     end
     
 end
-
 
 % --- Executes on button press in calendarbutton.
 function calendarbutton_Callback(hObject, eventdata, handles)
@@ -972,7 +971,6 @@ function calendarbutton_Callback(hObject, eventdata, handles)
     date_editbox_Callback(findobj('Tag', 'date_editbox'), eventdata, handles);
     
 end
-
 
 % --- Executes during object creation, after setting all properties.
 function calendarbutton_CreateFcn(hObject, eventdata, handles)
@@ -1152,7 +1150,6 @@ function DeleteAxis_Callback(hObject, eventdata, handles)
     
 end
 
-
 function uitoggletool2_ClickedCallback(hObject, eventdata, handles)
 end
 
@@ -1192,14 +1189,12 @@ end
 function Menu_Project_Callback(hObject, eventdata, handles)
 end
 
-
 % --------------------------------------------------------------------
 function Colorbar_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to Colorbar (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 end
-
 
 % --------------------------------------------------------------------
 function Menu_Axes_Callback(hObject, eventdata, handles)
@@ -1228,7 +1223,6 @@ function Align_Vertically_Callback(hObject, eventdata, handles)
     
 end
 
-
 % --------------------------------------------------------------------
 function Set_Equal_Width_Callback(hObject, eventdata, handles)
    
@@ -1248,7 +1242,6 @@ function Set_Equal_Width_Callback(hObject, eventdata, handles)
     end 
     
 end
-
 
 % --------------------------------------------------------------------
 function Set_Width_And_Align_Callback(hObject, eventdata, handles)
@@ -1270,7 +1263,6 @@ function Set_Width_And_Align_Callback(hObject, eventdata, handles)
     
 end
 
-
 % --------------------------------------------------------------------
 function Axes_Style_Callback(hObject, eventdata, handles)
     handles.AxesDesign = AxesDesign(hObject, handles);
@@ -1278,11 +1270,15 @@ function Axes_Style_Callback(hObject, eventdata, handles)
     guidata(hObject, handles);
 end
 
-
 % --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
     delete(hObject);
     if handles.AxDesignOpen == 1
         delete(handles.AxesDesign);
     end
+end
+
+% --------------------------------------------------------------------
+function PrpInspector_Callback(hObject, eventdata, handles)
+    inspect(handles.currentaxes)
 end
