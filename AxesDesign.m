@@ -22,7 +22,7 @@ function varargout = AxesDesign(varargin)
 
 % Edit the above text to modify the response to help AxesDesign
 
-% Last Modified by GUIDE v2.5 25-Apr-2017 22:56:49
+% Last Modified by GUIDE v2.5 04-May-2017 14:44:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -143,6 +143,16 @@ function y_max_CreateFcn(hObject, eventdata, handles)
         set(hObject, 'String', ylim(2))
     end
     
+    
+function Legend_Callback(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function Legend_CreateFcn(hObject, eventdata, handles)
+
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end    
+     
 % --- Executes on button press in SetButton.
 function SetButton_Callback(hObject, eventdata, handles)
     
@@ -156,11 +166,19 @@ function SetButton_Callback(hObject, eventdata, handles)
     ttl = get(handles.Title, 'String');
     ylim1 = str2double(get(handles.y_min, 'String'));
     ylim2 = str2double(get(handles.y_max, 'String'));
+    lgnd = get(handles.Legend, 'String');
     
     xlabel(xlab)
     ylabel(ylab)
     title(ttl)
     ylim([ylim1 ylim2])
+    if ~isempty(lgnd)
+        legend(lgnd)
+    end
+
+% --- Executes on button press in PrpInspector.
+function PrpInspector_Callback(hObject, eventdata, handles)
+    inspect(handles.Interface_handles.currentaxes)
 
 function colormap_min_Callback(hObject, eventdata, handles)
 
@@ -207,14 +225,15 @@ function Set_Spectrogram_Button_Callback(hObject, eventdata, handles)
     caxis([colormap_min colormap_max])
     
     % colorbar design
-    bar_handle = colorbar;
-    labels = get(bar_handle, 'yticklabel');
+    handles.bar_handle = colorbar;
+    labels = get(handles.bar_handle, 'yticklabel');
     barlabels = cell(size(labels, 1), 1);
     for i=1:size(labels, 1)
         barlabels{i} = ['10^{', labels{i}, '}'];
     end
-    set(bar_handle, 'yticklabel', char(barlabels), 'FontWeight', 'bold', 'fontsize', 7)
-    %ylabel(bar_handle, 'Differential energy flux') 
+    set(handles.bar_handle, 'yticklabel', char(barlabels), 'FontWeight', 'bold', 'fontsize', 7)
+    
+    guidata(hObject, handles); 
      
 
 % --- Executes when user attempts to close figure1 == AxesDesign menu.
