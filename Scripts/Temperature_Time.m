@@ -31,7 +31,6 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
     epoch = epoch(choose_ind);
     eflux = eflux(:, :, :, choose_ind);
     swp_ind = swp_ind(choose_ind);
-    quat_mso = quat_mso(choose_ind, :);
 
     q = 1.602177335e-19;
     aem = 1.66054021010e-27;
@@ -45,14 +44,15 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
     mass_num_range = find(( m>(mass-d_mass) )&( m<(mass+d_mass) ));
     mass_num = round((mass_num_range(1)+mass_num_range(end))/2);
     
-    eflux(:, :, mass_num, :) = sum(eflux(:, :, mass_num_range, :), 3);
+    
+    onemass_eflux = reshape( sum(eflux(:, :, mass_num_range, :), 3), [size(eflux, 1) size(eflux, 2) size(eflux, 4)] );
     v = 1*sqrt(2*q*energy./(aem*mass_arr));
 
-    phsdensity = zeros(size(eflux));
-    for i = 1:size(eflux, 4)
-        m_sq = aem*permute(squeeze(mass_arr(:, swp_ind(i)+1, :, :)), [2 1 3]);
-        e_sq = permute(squeeze(energy(:, swp_ind(i)+1, :, :)), [2 1 3]);
-        phsdensity(:, :, :, i) = 1e4*0.5*eflux(:, :, :, i).*(m_sq./(e_sq*q)).^2;
+    phsdensity = zeros(size(onemass_eflux));
+    for i = 1:size(onemass_eflux, 3)
+        m_sq = aem*permute(squeeze(mass_arr(:, swp_ind(i)+1, :, mass_num)), [2 1]);
+        e_sq = permute(squeeze(energy(:, swp_ind(i)+1, :, mass_num)), [2 1]);
+        phsdensity(:, :, i) = 1e4*0.5*onemass_eflux(:, :, i).*(m_sq./(e_sq*q)).^2;
     end
 
     concentration = zeros(length(epoch), 1);
@@ -65,10 +65,10 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
                     bin = ndef*(nphi-1)+ntheta; %CHECK
                     i = [en, swp_ind(timenum)+1, bin, mass_num];
                     volume = q*v(i(1),i(2),i(3),i(4))*domega(i(1),i(2),i(3),i(4))*denergy(i(1),i(2),i(3),i(4))/(aem*mass_arr(i(1),i(2),i(3),i(4)));
-                    concentration(timenum) = concentration(timenum) + volume*phsdensity(bin, en, mass_num, timenum);
-                    v_st(timenum, 1) = v_st(timenum, 1) + volume*v(i(1),i(2),i(3),i(4))*cos(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, mass_num, timenum);
-                    v_st(timenum, 2) = v_st(timenum, 2) + volume*v(i(1),i(2),i(3),i(4))*sin(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, mass_num, timenum);
-                    v_st(timenum, 3) = v_st(timenum, 3) + volume*v(i(1),i(2),i(3),i(4))*sin(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, mass_num, timenum);
+                    concentration(timenum) = concentration(timenum) + volume*phsdensity(bin, en, timenum);
+                    v_st(timenum, 1) = v_st(timenum, 1) + volume*v(i(1),i(2),i(3),i(4))*cos(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, timenum);
+                    v_st(timenum, 2) = v_st(timenum, 2) + volume*v(i(1),i(2),i(3),i(4))*sin(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, timenum);
+                    v_st(timenum, 3) = v_st(timenum, 3) + volume*v(i(1),i(2),i(3),i(4))*sin(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, timenum);
 
                 end
             end
@@ -77,7 +77,6 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
     for i=1:3
         v_st(:, i) = v_st(:, i)./concentration;
     end
-    v_mso = quatrotate(quat_mso, v_st);
 
     for timenum = 1:length(epoch)
         for en = 1:nenergy
@@ -87,15 +86,15 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
                     i = [en, swp_ind(timenum)+1, bin, mass_num];
                     volume = q*v(i(1),i(2),i(3),i(4))*domega(i(1),i(2),i(3),i(4))*denergy(i(1),i(2),i(3),i(4))/(aem*mass_arr(i(1),i(2),i(3),i(4)));
                     cur_v = [v(i(1),i(2),i(3),i(4))*cos(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4))),...
-                             v(i(1),i(2),i(3),i(4))*sin(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4))),...
-                             v(i(1),i(2),i(3),i(4))*sin(theta(i(1),i(2),i(3),i(4)))];
-                    temp(timenum) = temp(timenum) + aem*mass_arr(i(1),i(2),i(3),i(4))*sum((cur_v-v_st(timenum)).^2)*phsdensity(bin, en, mass_num, timenum)*volume;
+                        v(i(1),i(2),i(3),i(4))*sin(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4))),...
+                        v(i(1),i(2),i(3),i(4))*sin(theta(i(1),i(2),i(3),i(4)))];
+                    temp(timenum) = temp(timenum) + aem*mass_arr(i(1),i(2),i(3),i(4))*sum((cur_v-v_st(timenum)).^2)*phsdensity(bin, en, timenum)*volume;
                 end
             end
         end
     end
     temp = temp./(3*q*concentration);
-
+      
     axes(ax);
     if (log==1)
         semilogy(epoch, temp, 'color', 'black', 'linewidth', 2)

@@ -1,4 +1,4 @@
-function NumberDensity_Time(ax, start_time, stop_time, filename, specific_args) %d1 file is used
+function Speed_Time_V (ax, start_time, stop_time, filename, specific_args) %d1 file is being used
 
     mass = specific_args{1, 1}; 
     log = specific_args{1, 2};
@@ -13,24 +13,31 @@ function NumberDensity_Time(ax, start_time, stop_time, filename, specific_args) 
     nenergy = spdfcdfread(filename, 'variables', 'nenergy');
     nanode = spdfcdfread(filename, 'variables', 'nanode');
     ndef = spdfcdfread(filename, 'variables', 'ndef');
+    theta = spdfcdfread(filename, 'variables', 'theta');
+    phi = spdfcdfread(filename, 'variables', 'phi');
+    quat_mso = spdfcdfread(filename, 'variables', 'quat_mso');
     
     start_str = start_time; stop_str = stop_time; %save str version of start, stop times
-    %time
+    %time 
     difference = abs(datenum(datestr(epoch, 'HH:MM:SS')) - datenum(start_time));
     start_time = find (difference == min(difference), 1);
     difference = abs(datenum(datestr(epoch, 'HH:MM:SS')) - datenum(stop_time));
     stop_time = find (difference == min(difference), 1);
-    
-    timefrom = datenum(epoch(start_time));
-    timeto = datenum(epoch(stop_time));
-    
+
     q = 1.602177335e-19;
     aem = 1.66054021010e-27;
-    
+
+    timefrom = datenum(epoch(start_time));
+    timeto = datenum(epoch(stop_time));
+
     choose_ind = find(epoch>=timefrom & epoch<=timeto);
     epoch = epoch(choose_ind);
     eflux = eflux(:, :, :, choose_ind);
     swp_ind = swp_ind(choose_ind);
+    quat_mso = quat_mso(choose_ind, :);
+
+    theta = theta*pi/180;
+    phi = phi*pi/180;
 
     d_mass = 3; %a.u. (accuracy)
     swpind = swp_ind(1);
@@ -49,6 +56,7 @@ function NumberDensity_Time(ax, start_time, stop_time, filename, specific_args) 
     end
 
     concentration = zeros(length(epoch), 1);
+    v_st = zeros(length(epoch), 3);
     for timenum = 1:length(epoch)
         for en = 1:nenergy
             for nphi = 1:nanode
@@ -56,23 +64,32 @@ function NumberDensity_Time(ax, start_time, stop_time, filename, specific_args) 
                     bin = ndef*(nphi-1)+ntheta; %CHECK
                     i = [en, swp_ind(timenum)+1, bin, mass_num];
                     volume = q*v(i(1),i(2),i(3),i(4))*domega(i(1),i(2),i(3),i(4))*denergy(i(1),i(2),i(3),i(4))/(aem*mass_arr(i(1),i(2),i(3),i(4)));
-                    concentration(timenum) = concentration(timenum) + volume*phsdensity(bin, en, timenum);                    
+                    concentration(timenum) = concentration(timenum) + volume*phsdensity(bin, en, timenum);
+                    v_st(timenum, 1) = v_st(timenum, 1) + volume*v(i(1),i(2),i(3),i(4))*cos(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, timenum);
+                    v_st(timenum, 2) = v_st(timenum, 2) + volume*v(i(1),i(2),i(3),i(4))*sin(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, timenum);
+                    v_st(timenum, 3) = v_st(timenum, 3) + volume*v(i(1),i(2),i(3),i(4))*sin(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, timenum);
+
                 end
             end
         end
     end
+    for i=1:3
+        v_st(:, i) = v_st(:, i)./concentration;
+    end
+    v_mso = quatrotate(quatinv(quat_mso), v_st);
 
     axes(ax);
+    
     if (log==1)
-        semilogy(epoch, concentration/1e6, 'color', 'black', 'linewidth', 2)
+        semilogy(epoch, sqrt(v_mso(:, 1).^2+v_mso(:, 2).^2+v_mso(:, 3).^2)/1e3, 'color', 'red', 'linewidth', 2)
     else
-        plot(epoch,concentration/1e6, 'color', 'black', 'linewidth', 2)
+        plot(epoch, sqrt(v_mso(:, 1).^2+v_mso(:, 2).^2+v_mso(:, 3).^2)/1e3, 'color', 'red', 'linewidth', 2)
     end
     
-    ylabel('n, cm^{-3}')
     datetick('x','HH:MM:SS');
-    set (ax, 'fontsize', 8);
     grid on
+    ylabel('V, km/s')
+    set (ax, 'fontsize', 8);
     
     %xlim
     averind = round(size(epoch, 1)/2);
