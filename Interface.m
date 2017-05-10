@@ -764,23 +764,35 @@ function plotbutton_Callback(hObject, eventdata, handles)
                     assignin('base', 'spec_Args', specific_args)
                     assignin('base', 'chosen_Args', chosen_Args)
                 end
-                 
+                
+                
                 % check whether the current axis is empty or not
                 if ~is_current_ax_empty(handles.currentgraphs, handles.currentaxes)
-                    choice = questdlg('You want to plot another graph on this axis. Please choose one of the options.', 'Plotting options', 'Plot and update y-lim', 'Plot with a secondary axis on the right', 'Remove current graph and plot a new one', 'Plot and update y-lim');
-                    Sysmessage (['Please wait. "', chosen_fnct, '" is being plotted'])     
-                        switch choice
-                            case 'Plot and update y-lim'
-                                hold (handles.currentaxes, 'on')                                
-                            case 'Plot with a secondary axis on the right'
-                                yyaxis (handles.currentaxes, 'right')
-                            case 'Remove current graph and plot a new one'                                      
-                        end
+                    
+                    choice = questdlg('You are trying to plot another graph on this axis. Please choose one of the options.', 'Plotting options', 'Plot and update y-lim', 'Plot with a secondary axis on the right', 'Remove current graph and plot a new one', 'Plot and update y-lim');
+                    
+                    Sysmessage (['Please wait. "', chosen_fnct, '" is being plotted'])  
+                    
+                    % default settings
+                    yyaxis (handles.currentaxes, 'left')
+                    hold (handles.currentaxes, 'off')
+                    
+                    switch choice
+                        case 'Plot and update y-lim'
+                            hold (handles.currentaxes, 'on')                                
+                        case 'Plot with a secondary axis on the right'
+                            hold (handles.currentaxes, 'on')
+                            yyaxis (handles.currentaxes, 'right')
+                        case 'Remove current graph and plot a new one' 
+                            clearbutton_Callback(hObject, eventdata, handles)
+                    end
+                    
+                    if ~isempty(choice)
                         % run the chosen_fnct with arguments from the "Scripts" Folder
                         cd('./Scripts')
                         feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
-                        cd('../') % get back to the main folder
-                        hold (handles.currentaxes, 'off') 
+                        cd('../') % get back to the main folder 
+                    end
                 else
                     Sysmessage (['Please wait. "', chosen_fnct, '" is being plotted']) 
                     % run the chosen_fnct with arguments from the "Scripts" Folder
