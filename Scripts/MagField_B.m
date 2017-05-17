@@ -1,4 +1,4 @@
-function Magnetic_Field_Slow(ax, start_time, stop_time, filename, specific_args)
+function MagField_B(ax, start_time, stop_time, filename, specific_args)
     
     mf_filename = filename;
     %mf_data = dlmread(mf_filename, '', 145);
@@ -13,7 +13,6 @@ function Magnetic_Field_Slow(ax, start_time, stop_time, filename, specific_args)
 
     mf_epoch = mf_data(:, 7) + datenum(['00-Jan-', num2str(mf_data(1, 1)), ' 00:00:00']);
     choose_ind = find(mf_epoch>=timefrom & mf_epoch<=timeto);
-    mf_epoch = mf_epoch(choose_ind);
     mf_data2 = mf_data(choose_ind, :);
 
     Bx = mf_data2(:, 8);
@@ -23,13 +22,13 @@ function Magnetic_Field_Slow(ax, start_time, stop_time, filename, specific_args)
     
     axes (ax); 
     
-    plot(mf_data2(:,7), Bx, 'color', 'red', 'linewidth', 2)
-    hold on
-    plot(mf_data2(:,7), By, 'color', 'green', 'linewidth', 2)
-    plot(mf_data2(:,7), Bz, 'color', 'blue', 'linewidth', 2)
+    %plot(mf_data2(:,7), Bx, 'color', 'red', 'linewidth', 2)
+    %hold on
+    %plot(mf_data2(:,7), By, 'color', 'green', 'linewidth', 2)
+    %plot(mf_data2(:,7), Bz, 'color', 'blue', 'linewidth', 2)
     plot(mf_data2(:,7), B, 'color', 'black', 'linewidth', 2)
 
-    legendhndl = legend('B_x', 'B_y', 'B_z', 'B');
+    %legendhndl = legend('B_x', 'B_y', 'B_z', 'B');
     
     datetick('x','HH:MM:SS');
     ylabel('B, nT')
