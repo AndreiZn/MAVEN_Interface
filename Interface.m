@@ -769,18 +769,16 @@ function plotbutton_Callback(hObject, eventdata, handles)
                 % check whether the current axis is empty or not
                 if ~is_current_ax_empty(handles.currentgraphs, handles.currentaxes)
                     
-                    choice = questdlg('You are trying to plot another graph on this axis. Please choose one of the options.', 'Plotting options', 'Plot and update y-lim', 'Plot with a secondary axis on the right', 'Remove current graph and plot a new one', 'Plot and update y-lim');
+                    choice = questdlg('You are trying to plot another graph on this axis. Please choose one of the options.', 'Plotting options', 'Plot using left y-axis', 'Plot using right y-axis', 'Remove current graph and plot a new one', 'Plot using left y-axis');
                     
                     Sysmessage (['Please wait. "', chosen_fnct, '" is being plotted'])  
                     
-                    % default settings
-                    yyaxis (handles.currentaxes, 'left')
-                    hold (handles.currentaxes, 'off')
                     
                     switch choice
-                        case 'Plot and update y-lim'
-                            hold (handles.currentaxes, 'on')                                
-                        case 'Plot with a secondary axis on the right'
+                        case 'Plot using left y-axis'
+                            hold (handles.currentaxes, 'on') 
+                            yyaxis (handles.currentaxes, 'left')
+                        case 'Plot using right y-axis'
                             hold (handles.currentaxes, 'on')
                             yyaxis (handles.currentaxes, 'right')
                         case 'Remove current graph and plot a new one' 
