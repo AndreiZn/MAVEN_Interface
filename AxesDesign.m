@@ -22,7 +22,7 @@ function varargout = AxesDesign(varargin)
 
     % Edit the above text to modify the response to help AxesDesign
 
-    % Last Modified by GUIDE v2.5 04-May-2017 14:44:19
+    % Last Modified by GUIDE v2.5 17-May-2017 13:53:16
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -60,6 +60,7 @@ function AxesDesign_OpeningFcn(hObject, eventdata, handles, varargin)
     Title_CreateFcn(findobj('Tag', 'Title'), eventdata, handles);
     y_min_CreateFcn(findobj('Tag', 'y_min'), eventdata, handles);
     y_max_CreateFcn(findobj('Tag', 'y_max'), eventdata, handles);
+    Legend_CreateFcn(findobj('Tag', 'Legend'), eventdata, handles)
     colormap_min_CreateFcn(findobj('Tag', 'colormap_min'), eventdata, handles);
     colormap_max_CreateFcn(findobj('Tag', 'colormap_max'), eventdata, handles);
     % UIWAIT makes AxesDesign wait for user response (see UIRESUME)
@@ -143,16 +144,52 @@ function y_max_CreateFcn(hObject, eventdata, handles)
         set(hObject, 'String', ylim(2))
     end
     
+% --- Executes on button press in legend_checkbox.
+function legend_checkbox_Callback(hObject, eventdata, handles)
+    
+    
+    if get(findobj('Tag', 'legend_checkbox'), 'Value') == 1
+        
+        legend(handles.Interface_handles.currentaxes, 'show')
+        legend_txt = get(legend(handles.Interface_handles.currentaxes), 'String');
+        
+        if ~isempty(legend_txt)
+            str = legend_txt{1};
+            for i=2:numel(legend_txt)
+                str = [str, ', ', legend_txt{i}];
+            end    
+            set (findobj('Tag', 'Legend'), 'String', str)
+        else
+            set (findobj('Tag', 'Legend'), 'String', '')
+        end
+        
+    else
+        legend(handles.Interface_handles.currentaxes, 'off');
+        set (findobj('Tag', 'Legend'), 'String', '')
+    end    
     
 function Legend_Callback(hObject, eventdata, handles)
 
 % --- Executes during object creation, after setting all properties.
 function Legend_CreateFcn(hObject, eventdata, handles)
+   
+    if ~isempty (handles)
+        
+        if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+            set(hObject,'BackgroundColor','white');
+        end  
 
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end    
-     
+        if ~isempty(legend(handles.Interface_handles.currentaxes))
+            set(findobj('Tag', 'legend_checkbox'), 'Value', 1)
+            legend_checkbox_Callback(findobj('Tag', 'legend_checkbox'), eventdata, handles)
+        else
+            set(findobj('Tag', 'legend_checkbox'), 'Value', 0)
+            legend_checkbox_Callback(findobj('Tag', 'legend_checkbox'), eventdata, handles)
+        end    
+    
+    end
+        
+    
 % --- Executes on button press in SetButton.
 function SetButton_Callback(hObject, eventdata, handles)
     
@@ -166,16 +203,18 @@ function SetButton_Callback(hObject, eventdata, handles)
     ttl = get(handles.Title, 'String');
     ylim1 = str2double(get(handles.y_min, 'String'));
     ylim2 = str2double(get(handles.y_max, 'String'));
-    lgnd = get(handles.Legend, 'String');
+    if get(findobj('Tag', 'legend_checkbox'), 'Value') == 1
+        leg_str = get(findobj('Tag', 'Legend'), 'String');
+        leg_cell = strsplit(leg_str,',');
+        legend(handles.Interface_handles.currentaxes, 'String', leg_cell)
+    end
     
     xlabel(xlab)
     ylabel(ylab)
     title(ttl)
     ylim([ylim1 ylim2])
-    if ~isempty(lgnd)
-        legend(lgnd)
-    end
-
+    
+    
 % --- Executes on button press in PrpInspector.
 function PrpInspector_Callback(hObject, eventdata, handles)
     inspect(handles.Interface_handles.currentaxes)
