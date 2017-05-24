@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 04-May-2017 14:53:00
+    % Last Modified by GUIDE v2.5 24-May-2017 16:37:56
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -1326,4 +1326,34 @@ end
 % --------------------------------------------------------------------
 function PrpInspector_Callback(hObject, eventdata, handles)
     inspect(handles.currentaxes)
+end
+
+% --------------------------------------------------------------------
+function Data_Callback(hObject, eventdata, handles)
+end
+
+% --------------------------------------------------------------------
+function SaveData_Callback(hObject, eventdata, handles)
+    
+    h = findobj(handles.currentaxes, 'Type', 'line');
+    x=get(h,'Xdata');
+    y=get(h,'Ydata');
+    data(1, :) = x;
+    data(2, :) = y;
+    
+    [FileName, FilePath] = uiputfile({'*.mat'}, 'Save as', './Data/Data');
+    
+    if ~isequal(FileName, 0)
+        save([FilePath, FileName], 'data')   
+    end
+end    
+
+
+% --------------------------------------------------------------------
+function PlotData_Callback(hObject, eventdata, handles)
+    [FileName,PathName] = uigetfile('*.mat','Select the file to be plotted');
+    data = open([PathName, FileName]);
+    data=data.data;
+    assignin('base', 'data', data)
+    plot(handles.currentaxes, data(1, :), data(2, :))
 end

@@ -22,7 +22,7 @@ function varargout = AxesDesign(varargin)
 
     % Edit the above text to modify the response to help AxesDesign
 
-    % Last Modified by GUIDE v2.5 17-May-2017 13:53:16
+    % Last Modified by GUIDE v2.5 24-May-2017 15:11:24
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -56,10 +56,13 @@ function AxesDesign_OpeningFcn(hObject, eventdata, handles, varargin)
     guidata(hObject, handles);
 
     xlabel_CreateFcn(findobj('Tag', 'xlabel'), eventdata, handles);
-    ylabel_CreateFcn(findobj('Tag', 'ylabel'), eventdata, handles);
     Title_CreateFcn(findobj('Tag', 'Title'), eventdata, handles);
+    ylabel_CreateFcn(findobj('Tag', 'ylabel'), eventdata, handles);    
     y_min_CreateFcn(findobj('Tag', 'y_min'), eventdata, handles);
     y_max_CreateFcn(findobj('Tag', 'y_max'), eventdata, handles);
+    r_ylabel_CreateFcn(findobj('Tag', 'r_ylabel'), eventdata, handles);    
+    r_y_min_CreateFcn(findobj('Tag', 'r_y_min'), eventdata, handles);
+    r_y_max_CreateFcn(findobj('Tag', 'r_y_max'), eventdata, handles);
     Legend_CreateFcn(findobj('Tag', 'Legend'), eventdata, handles)
     colormap_min_CreateFcn(findobj('Tag', 'colormap_min'), eventdata, handles);
     colormap_max_CreateFcn(findobj('Tag', 'colormap_max'), eventdata, handles);
@@ -90,20 +93,6 @@ function xlabel_CreateFcn(hObject, eventdata, handles)
         set(hObject, 'String', xlab_str)
     end
 
-function ylabel_Callback(hObject, eventdata, handles)
-
-% --- Executes during object creation, after setting all properties.
-function ylabel_CreateFcn(hObject, eventdata, handles)
-
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end
-    if ~isempty (handles)
-        ylab_text = get(handles.Interface_handles.currentaxes, 'ylabel');
-        ylab_str = get(ylab_text, 'String');
-        set(hObject, 'String', ylab_str)
-    end
-
 function Title_Callback(hObject, eventdata, handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -116,6 +105,21 @@ function Title_CreateFcn(hObject, eventdata, handles)
         ttl_text = get(handles.Interface_handles.currentaxes, 'title');
         ttl_str = get(ttl_text, 'String');
         set(hObject, 'String', ttl_str)
+    end    
+    
+function ylabel_Callback(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function ylabel_CreateFcn(hObject, eventdata, handles)
+
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+    if ~isempty (handles)
+        yyaxis(handles.Interface_handles.currentaxes, 'left')
+        ylab_text = get(handles.Interface_handles.currentaxes, 'ylabel');
+        ylab_str = get(ylab_text, 'String');
+        set(hObject, 'String', ylab_str)
     end
 
 function y_min_Callback(hObject, eventdata, handles)
@@ -127,6 +131,7 @@ function y_min_CreateFcn(hObject, eventdata, handles)
         set(hObject,'BackgroundColor','white');
     end
     if ~isempty (handles)
+        yyaxis(handles.Interface_handles.currentaxes, 'left')
         ylim = get(handles.Interface_handles.currentaxes, 'ylim');
         set(hObject, 'String', ylim(1))
     end
@@ -140,9 +145,52 @@ function y_max_CreateFcn(hObject, eventdata, handles)
         set(hObject,'BackgroundColor','white');
     end 
     if ~isempty (handles)
+        yyaxis(handles.Interface_handles.currentaxes, 'left')
         ylim = get(handles.Interface_handles.currentaxes, 'ylim');
         set(hObject, 'String', ylim(2))
     end
+
+function r_ylabel_Callback(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function r_ylabel_CreateFcn(hObject, eventdata, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end   
+    if ~isempty (handles)
+        yyaxis(handles.Interface_handles.currentaxes, 'right')
+        ylab_text = get(handles.Interface_handles.currentaxes, 'ylabel');
+        ylab_str = get(ylab_text, 'String');
+        set(hObject, 'String', ylab_str)
+    end
+
+function r_y_min_Callback(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function r_y_min_CreateFcn(hObject, eventdata, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+    if ~isempty (handles)
+        yyaxis(handles.Interface_handles.currentaxes, 'right')
+        ylim = get(handles.Interface_handles.currentaxes, 'ylim');
+        set(hObject, 'String', ylim(1))
+    end    
+    
+function r_y_max_Callback(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function r_y_max_CreateFcn(hObject, eventdata, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+    if ~isempty (handles)
+        yyaxis(handles.Interface_handles.currentaxes, 'right')
+        ylim = get(handles.Interface_handles.currentaxes, 'ylim');
+        set(hObject, 'String', ylim(2))
+    end 
+
+    
     
 % --- Executes on button press in legend_checkbox.
 function legend_checkbox_Callback(hObject, eventdata, handles)
@@ -199,10 +247,13 @@ function SetButton_Callback(hObject, eventdata, handles)
     
     % get all the properties
     xlab = get(handles.xlabel, 'String');
-    ylab = get(handles.ylabel, 'String');
     ttl = get(handles.Title, 'String');
+    ylab = get(handles.ylabel, 'String');
     ylim1 = str2double(get(handles.y_min, 'String'));
     ylim2 = str2double(get(handles.y_max, 'String'));
+    r_ylab = get(handles.r_ylabel, 'String');
+    r_ylim1 = str2double(get(handles.r_y_min, 'String'));
+    r_ylim2 = str2double(get(handles.r_y_max, 'String'));
     if get(findobj('Tag', 'legend_checkbox'), 'Value') == 1
         leg_str = get(findobj('Tag', 'Legend'), 'String');
         leg_cell = strsplit(leg_str,',');
@@ -210,8 +261,14 @@ function SetButton_Callback(hObject, eventdata, handles)
     end
     
     xlabel(xlab)
-    ylabel(ylab)
     title(ttl)
+    
+    yyaxis(handles.Interface_handles.currentaxes, 'right')
+    ylabel(r_ylab)
+    ylim([r_ylim1 r_ylim2])
+    
+    yyaxis(handles.Interface_handles.currentaxes, 'left')
+    ylabel(ylab)
     ylim([ylim1 ylim2])
     
     
