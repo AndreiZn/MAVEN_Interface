@@ -1338,19 +1338,34 @@ function SaveData_Callback(hObject, eventdata, handles)
     h = findobj(handles.currentaxes, 'Type', 'line');
     x=get(h,'Xdata');
     y=get(h,'Ydata');
+     
     data(1, :) = x;
     data(2, :) = y;
+    time_str = datestr(x);
+    data(3, :) = str2double(time_str(:, 1:2)); %day
+    %assignin('base', 'month', time_str(:, 4:6))
+    %for i=1:numel(x)
+    %    assignin('base', 'month', {time_str(i, 4:6)})
+    %    data(4, i) = time_str(i, 4:6); %month
+    %end    
+    data(4, :) = str2double(time_str(:, 13:14)); %hour
+    data(5, :) = str2double(time_str(:, 16:17)); %minute
+    data(6, :) = str2double(time_str(:, 19:20)); %second
     
-    [FileName, FilePath] = uiputfile({'*.mat'}, 'Save as', './Data/Data');
+    assignin('base', 'x', x)
+    assignin('base', 'data', data)
+    [FileName, FilePath] = uiputfile({'*.mat';'*.dat';'*.sts';'*.txt';'*.*'}, 'Save as', './Data/Data');
     
     if ~isequal(FileName, 0)
-        save([FilePath, FileName], 'data')   
+        %save([FilePath, FileName], 'data')   
+        dlmwrite([FilePath, FileName], 'data', ' ')
     end
 end    
 
 
 % --------------------------------------------------------------------
 function PlotData_Callback(hObject, eventdata, handles)
+
     [FileName,PathName] = uigetfile('*.mat','Select the file to be plotted');
     data = open([PathName, FileName]);
     data=data.data;
