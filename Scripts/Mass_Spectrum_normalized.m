@@ -1,4 +1,4 @@
-function Mass_Spectrum(ax, start_time, stop_time, filename, specific_args)
+function Mass_Spectrum_normalized(ax, start_time, stop_time, filename, specific_args)
 
     epoch = spdfcdfread(filename, 'variables', 'epoch');
     eflux = spdfcdfread(filename, 'variables', 'eflux');
