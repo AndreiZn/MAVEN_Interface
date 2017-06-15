@@ -286,6 +286,7 @@ function colormap_min_CreateFcn(hObject, eventdata, handles)
     end
     set(hObject, 'String', 'not applicable')
     if ~isempty (handles)       
+        yyaxis(handles.Interface_handles.currentaxes, 'left')
         chld = get(handles.Interface_handles.currentaxes, 'Children');
         if isa(chld, 'matlab.graphics.primitive.Surface')            
             CLim = get(handles.Interface_handles.currentaxes, 'CLim');
