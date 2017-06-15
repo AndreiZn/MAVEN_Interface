@@ -1,7 +1,7 @@
 function [Args, dscrp] = Flux_Time_Spectrogram_Args()
 
     field1 = 'File';
-    value1 = {{'c6_32e64m', ''}}; %{filetype, path to the file}
+    value1 = {{'c6_32e64m', ''}; {'', '.'}}; %{filetype, path to the file}
     
     field_dscrp = 'description';
     value_dscrp = {'listbox'};

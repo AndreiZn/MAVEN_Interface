@@ -5,7 +5,7 @@ function [Args, dscrp] = NumberDensity_Time_Args()
     field2 = 'LogScale';
     value2 = {{'off', 0}; {'on', 1}};
     field3 = 'File';
-    value3 = {{'d1_32e4d16a8m', ''}}; %{filetype, path to the file}
+    value3 = {{'d1_32e4d16a8m', ''}; {'', '.'}}; %{filetype, path to the file}
     
     field_dscrp = 'description';
     value_dscrp = {'listbox', 'listbox', 'listbox'};

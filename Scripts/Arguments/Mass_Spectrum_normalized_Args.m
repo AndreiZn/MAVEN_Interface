@@ -1,4 +1,4 @@
-function [Args, dscrp] = Mass_Spectrum_Args()
+function [Args, dscrp] = Mass_Spectrum_normalized_Args()
 
     field1 = 'Time';
     value1 = {{'String', ''}};
