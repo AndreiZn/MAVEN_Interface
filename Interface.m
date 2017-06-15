@@ -561,6 +561,21 @@ function [fls2] = files_relatedto_date(fls, y, m, d)
     
 end
 
+function [fls_out] = files_with_extension (fls, extension) % find files with extension 'extension' among files 'fls'
+    
+    p_fwe = 1;
+    fls_out{1} = '';
+    for ind_fwe = 1:numel(fls)
+        f = fls{ind_fwe}; % 'filename.ext' 
+        k = strfind (f, extension);
+        if ~isempty(k)
+            fls_out{p_fwe} = f; 
+            p_fwe = p_fwe + 1;
+        end    
+    end    
+
+end
+
 % --- Executes on selection change in listbox2.
 function listbox2_Callback(hObject, eventdata, handles)
 
@@ -639,8 +654,8 @@ function listbox2_Callback(hObject, eventdata, handles)
                     filepath = [handles.filefolderpath, '\', filetype,'\', handles.year, '\', handles.month];
 
                     files = dir(filepath); %all files and folders from the address = filepath 
-                    files = {files(3:end).name}'; %delete first three folders, because they are always '.' and '..'
-
+                    files = {files(3:end).name}'; %delete first two folders, because they are always '.' and '..'
+                    
                     %checking whether the folder has any files
                     if (isempty(files))
                         message = ['There are no files of ', filetype, ' type for ', date, ' at ', handles.filefolderpath, ', which are necessary for ', handles.chosenfunc];
@@ -650,8 +665,26 @@ function listbox2_Callback(hObject, eventdata, handles)
                         %find all files related to the chosen date
                         %files2 will contain all files related to the date = 'date'              
                         files2 = files_relatedto_date(files, handles.year, handles.month, handles.day);
-                        files2 = files2{1}; %if files2 still has several files we choose the first one                
-
+                        
+                        % find files with necessary extension
+                        temp_files = {''}; % this variable collects files with extension 'ext' (see below)
+                        
+                        for extension_ind = 2:numel(args_i)    
+                            if ~isequal(temp_files, {''})
+                                break
+                            else    
+                                ext = args_i{extension_ind}(2); % extension. e.g, .mat
+                                ext = ext{1}; % to make it a string                            
+                                temp_files = files_with_extension (files2, ext); % find file with extension 'ext' among files2
+                            end    
+                        end
+                        assignin('base', 'files', temp_files)
+                        if isempty(temp_files)
+                            Sysmessage ('No files with chosen extension')
+                        else
+                            files2 = temp_files{1}; %if the variable 'temp_files' still has several files we choose the first one                
+                        end    
+                        
                         %checking whether the folder has necessary files
                         if (isempty(files2))
                             message = ['There are no files of ', filetype, ' type for ', date, ' at ', handles.filefolderpath, ', which are necessary for ', handles.chosenfunc];
@@ -1370,5 +1403,7 @@ function PlotData_Callback(hObject, eventdata, handles)
     data = open([PathName, FileName]);
     data=data.data;
     assignin('base', 'data', data)
-    plot(handles.currentaxes, data(1, :), data(2, :))
+    plot(handles.currentaxes, data(1, :), data(2, :), 'linewidth', 2)
+    grid on
+    datetick('x','HH:MM:SS');
 end
