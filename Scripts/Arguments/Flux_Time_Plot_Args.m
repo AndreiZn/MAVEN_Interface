@@ -5,7 +5,7 @@ function [Args, dscrp] = Flux_Time_Plot_Args()
     field2 = 'LogScale';
     value2 = {{'off', 0}; {'on', 1}};
     field3 = 'File';
-    value3 = {{'c6_32e64m', ''}};
+    value3 = {{'c6_32e64m', ''}; {'', '.'}};
     
     field_dscrp = 'description';
     value_dscrp = {'listbox', 'listbox', 'listbox'};

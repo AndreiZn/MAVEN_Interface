@@ -1,7 +1,7 @@
-function [Args, dscrp] = B_z_Args()
+function [Args, dscrp] = MagField_B_z_Args()
 
     field1 = 'File'; %File! not 'file'
-    value1 = {{'mag', ''}}; %{filetype, path to the file}
+    value1 = {{'mag', ''}; {'', '.mat',}; {'', '.sts'}}; %{filetype, path to the file}
     
     field_dscrp = 'description';
     value_dscrp = {'listbox'};

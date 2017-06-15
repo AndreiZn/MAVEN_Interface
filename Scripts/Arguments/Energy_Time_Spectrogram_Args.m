@@ -5,15 +5,10 @@ function [Args, dscrp] = Energy_Time_Spectrogram_Args()
     field2 = 'LogScale';
     value2 = {{'on', 1}; {'off', 0}};
     field3 = 'File';
-    value3 = {{'c6_32e64m', ''}}; %{filetype, path to the file}
-    %field4 = 'Colormap_min';
-    %value4 = {{'String', ''}};
-    %field5 = 'Colormap_max';
-    %value5 = {{'String', ''}};
+    value3 = {{'c6_32e64m', ''}; {'', '.'}}; %{filetype, path to the file}
     
     field_dscrp = 'description';
     value_dscrp = {'listbox', 'listbox', 'listbox'};
-    %value_dscrp = {'listbox', 'listbox', 'listbox', 'editbox', 'editbox'};
     
     Args = struct(field1, {value1}, field2, {value2}, field3, {value3});
     dscrp = struct(field_dscrp, {value_dscrp});
