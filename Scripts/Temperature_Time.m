@@ -63,13 +63,17 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
             for nphi = 1:nanode
                 for ntheta = 1:ndef
                     bin = ndef*(nphi-1)+ntheta; %CHECK
-                    i = [en, swp_ind(timenum)+1, bin, mass_num];
-                    volume = q*v(i(1),i(2),i(3),i(4))*domega(i(1),i(2),i(3),i(4))*denergy(i(1),i(2),i(3),i(4))/(aem*mass_arr(i(1),i(2),i(3),i(4)));
-                    concentration(timenum) = concentration(timenum) + volume*phsdensity(bin, en, timenum);
-                    v_st(timenum, 1) = v_st(timenum, 1) + volume*v(i(1),i(2),i(3),i(4))*cos(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, timenum);
-                    v_st(timenum, 2) = v_st(timenum, 2) + volume*v(i(1),i(2),i(3),i(4))*sin(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, timenum);
-                    v_st(timenum, 3) = v_st(timenum, 3) + volume*v(i(1),i(2),i(3),i(4))*sin(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, timenum);
+                    swp_i = swp_ind(timenum);
+                    v_ccl = v(en,swp_i+1,bin,mass_num); 
+                    phdens = phsdensity(bin, en, timenum); 
+                    ph = phi(en,swp_i+1,bin,mass_num); 
+                    tht = theta(en,swp_i+1,bin,mass_num); 
 
+                    volume = q*v_ccl*domega(en,swp_i+1,bin,mass_num)*denergy(en,swp_i+1,bin,mass_num)/(aem*mass_arr(en,swp_i+1,bin,mass_num));
+                    concentration(timenum) = concentration(timenum) + volume*phdens;
+                    v_st(timenum, 1) = v_st(timenum, 1) + volume*v_ccl*cos(ph)*cos(tht)*phdens;
+                    v_st(timenum, 2) = v_st(timenum, 2) + volume*v_ccl*sin(ph)*cos(tht)*phdens;
+                    v_st(timenum, 3) = v_st(timenum, 3) + volume*v_ccl*sin(tht)*phdens;
                 end
             end
         end
@@ -83,12 +87,17 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
             for nphi = 1:nanode
                 for ntheta = 1:ndef
                     bin = ndef*(nphi-1)+ntheta;
-                    i = [en, swp_ind(timenum)+1, bin, mass_num];
-                    volume = q*v(i(1),i(2),i(3),i(4))*domega(i(1),i(2),i(3),i(4))*denergy(i(1),i(2),i(3),i(4))/(aem*mass_arr(i(1),i(2),i(3),i(4)));
-                    cur_v = [v(i(1),i(2),i(3),i(4))*cos(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4))),...
-                        v(i(1),i(2),i(3),i(4))*sin(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4))),...
-                        v(i(1),i(2),i(3),i(4))*sin(theta(i(1),i(2),i(3),i(4)))];
-                    temp(timenum) = temp(timenum) + aem*mass_arr(i(1),i(2),i(3),i(4))*sum((cur_v-v_st(timenum)).^2)*phsdensity(bin, en, timenum)*volume;
+                        swp_i = swp_ind(timenum);
+                        v_ccl = v(en,swp_i+1,bin,mass_num);
+                        ph = phi(en,swp_i+1,bin,mass_num); 
+                        tht = theta(en,swp_i+1,bin,mass_num); 
+                        %m_arr = mass_arr(en,swp_i+1,bin,mass_num);
+                        
+                        %volume = q*v_ccl*domega(en,swp_i+1,bin,mass_num)*denergy(en,swp_i+1,bin,mass_num)/(aem*m_arr);
+                        %cur_v = v_ccl*[cos(ph)*cos(tht),sin(ph)*cos(tht),sin(tht)];
+                        %temp(timenum) = temp(timenum) + aem*m_arr*sum((cur_v-v_st(timenum)).^2)*phsdensity(bin, en, timenum)*volume;
+                        volume = q*v_ccl*domega(en,swp_i+1,bin,mass_num)*denergy(en,swp_i+1,bin,mass_num);
+                        temp(timenum) = temp(timenum) + sum((v_ccl*[cos(ph)*cos(tht),sin(ph)*cos(tht),sin(tht)]-v_st(timenum)).^2)*phsdensity(bin, en, timenum)*volume;
                 end
             end
         end

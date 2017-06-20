@@ -53,10 +53,13 @@ function NumberDensity_Time(ax, start_time, stop_time, filename, specific_args) 
         for en = 1:nenergy
             for nphi = 1:nanode
                 for ntheta = 1:ndef
-                    bin = ndef*(nphi-1)+ntheta; %CHECK
-                    i = [en, swp_ind(timenum)+1, bin, mass_num];
-                    volume = q*v(i(1),i(2),i(3),i(4))*domega(i(1),i(2),i(3),i(4))*denergy(i(1),i(2),i(3),i(4))/(aem*mass_arr(i(1),i(2),i(3),i(4)));
-                    concentration(timenum) = concentration(timenum) + volume*phsdensity(bin, en, timenum);                    
+                        bin = ndef*(nphi-1)+ntheta;
+                        swp_i = swp_ind(timenum);
+                        v_ccl = v(en,swp_i+1,bin,mass_num); 
+                        phdens = phsdensity(bin, en, timenum); 
+
+                        volume = q*v_ccl*domega(en,swp_i+1,bin,mass_num)*denergy(en,swp_i+1,bin,mass_num)/(aem*mass_arr(en,swp_i+1,bin,mass_num));
+                        concentration(timenum) = concentration(timenum) + volume*phdens;                  
                 end
             end
         end

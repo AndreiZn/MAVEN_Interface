@@ -1,4 +1,4 @@
-function Speed_Time_V_y (ax, start_time, stop_time, filename, specific_args) %d1 file is being used
+function Velocity_Time_V_x (ax, start_time, stop_time, filename, specific_args) %d1 file is being used
 
     mass = specific_args{1, 1}; 
     log = specific_args{1, 2};
@@ -62,13 +62,17 @@ function Speed_Time_V_y (ax, start_time, stop_time, filename, specific_args) %d1
             for nphi = 1:nanode
                 for ntheta = 1:ndef
                     bin = ndef*(nphi-1)+ntheta; %CHECK
-                    i = [en, swp_ind(timenum)+1, bin, mass_num];
-                    volume = q*v(i(1),i(2),i(3),i(4))*domega(i(1),i(2),i(3),i(4))*denergy(i(1),i(2),i(3),i(4))/(aem*mass_arr(i(1),i(2),i(3),i(4)));
-                    concentration(timenum) = concentration(timenum) + volume*phsdensity(bin, en, timenum);
-                    v_st(timenum, 1) = v_st(timenum, 1) + volume*v(i(1),i(2),i(3),i(4))*cos(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, timenum);
-                    v_st(timenum, 2) = v_st(timenum, 2) + volume*v(i(1),i(2),i(3),i(4))*sin(phi(i(1),i(2),i(3),i(4)))*cos(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, timenum);
-                    v_st(timenum, 3) = v_st(timenum, 3) + volume*v(i(1),i(2),i(3),i(4))*sin(theta(i(1),i(2),i(3),i(4)))*phsdensity(bin, en, timenum);
+                    swp_i = swp_ind(timenum);
+                    v_ccl = v(en,swp_i+1,bin,mass_num); 
+                    phdens = phsdensity(bin, en, timenum); 
+                    ph = phi(en,swp_i+1,bin,mass_num); 
+                    tht = theta(en,swp_i+1,bin,mass_num); 
 
+                    volume = q*v_ccl*domega(en,swp_i+1,bin,mass_num)*denergy(en,swp_i+1,bin,mass_num)/(aem*mass_arr(en,swp_i+1,bin,mass_num));
+                    concentration(timenum) = concentration(timenum) + volume*phdens;
+                    v_st(timenum, 1) = v_st(timenum, 1) + volume*v_ccl*cos(ph)*cos(tht)*phdens;
+                    v_st(timenum, 2) = v_st(timenum, 2) + volume*v_ccl*sin(ph)*cos(tht)*phdens;
+                    v_st(timenum, 3) = v_st(timenum, 3) + volume*v_ccl*sin(tht)*phdens;
                 end
             end
         end
@@ -81,14 +85,14 @@ function Speed_Time_V_y (ax, start_time, stop_time, filename, specific_args) %d1
     axes(ax);
     
     if (log==1)
-        semilogy(epoch, v_mso(:, 2)/1e3, 'color', 'red', 'linewidth', 2)
+        semilogy(epoch, v_mso(:, 1)/1e3, 'color', 'red', 'linewidth', 2)
     else
-        plot(epoch, v_mso(:, 2)/1e3, 'color', 'red', 'linewidth', 2)
+        plot(epoch, v_mso(:, 1)/1e3, 'color', 'red', 'linewidth', 2)
     end
     
     datetick('x','HH:MM:SS');
     grid on
-    ylabel('V_y, km/s')
+    ylabel('V_x, km/s')
     set (ax, 'fontsize', 8);
     
     %xlim

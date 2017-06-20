@@ -1,4 +1,4 @@
-function [Args, dscrp] = Speed_Time_V_y_Args()
+function [Args, dscrp] = Velocity_Time_V_Args()
     
     field1 = 'Mass';
     value1 = {{'H+', 1}; {'He+', 4}; {'C+', 12}; {'O+', 16}; {'O2+', 32}; {'CO2+', 44}};
