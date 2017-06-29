@@ -25,7 +25,7 @@ function MagField_B(ax, start_time, stop_time, filename, specific_args)
     
     axes(ax); 
 
-    plot(mf_data2(:,7), B, 'color', 'black', 'linewidth', 2)
+    plot(mf_data2(:,7), B, 'linewidth', 2)
     
     datetick('x','HH:MM:SS');
     ylabel('B, nT')

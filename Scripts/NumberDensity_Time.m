@@ -67,9 +67,9 @@ function NumberDensity_Time(ax, start_time, stop_time, filename, specific_args) 
 
     axes(ax);
     if (log==1)
-        semilogy(epoch, concentration/1e6, 'color', 'black', 'linewidth', 2)
+        semilogy(epoch, concentration/1e6, 'linewidth', 2)
     else
-        plot(epoch,concentration/1e6, 'color', 'black', 'linewidth', 2)
+        plot(epoch,concentration/1e6, 'linewidth', 2)
     end
     
     ylabel('n, cm^{-3}')
