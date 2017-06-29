@@ -23,8 +23,8 @@ function MagField_B_x(ax, start_time, stop_time, filename, specific_args)
     
     axes (ax); 
     
-    plot(mf_data2(:,7), Bx, 'color', 'red', 'linewidth', 2)
-    
+    plot(mf_data2(:,7), Bx, 'linewidth', 2)
+   
     datetick('x','HH:MM:SS');
     ylabel('B_x, nT')
     grid on
