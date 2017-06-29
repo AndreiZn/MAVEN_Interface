@@ -119,6 +119,10 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     % sum of heights of available axes
     handles.starting_size_of_panel = get(handles.scrolling_panel, 'Position');
     
+    % Default ColorOrder and LineStyleOrder of axes
+    handles.default_colororder = get(handles.axes1, 'ColorOrder');
+    handles.default_linestyleorder = get(handles.axes1, 'LineStyleOrder');
+    
     % 0 if AxesDesign menu is not open, 1 when it's open
     handles.AxDesignOpen = 0;
     
@@ -810,10 +814,14 @@ function plotbutton_Callback(hObject, eventdata, handles)
                     switch choice
                         case 'Plot using left y-axis'
                             hold (handles.currentaxes, 'on') 
-                            yyaxis (handles.currentaxes, 'left')
+                            yyaxis (handles.currentaxes, 'left')                      
+                            set(handles.currentaxes, 'ColorOrder', handles.default_colororder(2:end, :))
+                            set(handles.currentaxes, 'LineStyleOrder', handles.default_linestyleorder)
                         case 'Plot using right y-axis'
                             hold (handles.currentaxes, 'on')
                             yyaxis (handles.currentaxes, 'right')
+                            set(handles.currentaxes, 'ColorOrder', handles.default_colororder(2:end, :))
+                            set(handles.currentaxes, 'LineStyleOrder', '*')
                         case 'Remove current graph and plot a new one' 
                             clearbutton_Callback(hObject, eventdata, handles)
                     end
@@ -1372,26 +1380,37 @@ function SaveData_Callback(hObject, eventdata, handles)
     x=get(h,'Xdata');
     y=get(h,'Ydata');
      
-    data(1, :) = x;
-    data(2, :) = y;
-    time_str = datestr(x);
-    data(3, :) = str2double(time_str(:, 1:2)); %day
-    %assignin('base', 'month', time_str(:, 4:6))
-    %for i=1:numel(x)
-    %    assignin('base', 'month', {time_str(i, 4:6)})
-    %    data(4, i) = time_str(i, 4:6); %month
-    %end    
-    data(4, :) = str2double(time_str(:, 13:14)); %hour
-    data(5, :) = str2double(time_str(:, 16:17)); %minute
-    data(6, :) = str2double(time_str(:, 19:20)); %second
+    %data(1, :) = x;
+    
+    time_str = datestr(x, 'yyyy-mm-dd HH:MM:SS');
+    %data(3, :) = str2double(time_str(:, 1:2)); %day
+    assignin('base', 'time', time_str)
+%     for i=1:numel(x)
+%          %data(3, i) = str2double(time_str(i, 1:2)); %day
+%          data(1, i) = str2double(time_str(i, 13:14)); %hour
+%          data(2, i) = str2double(time_str(i, 16:17)); %minute
+%          data(3, i) = str2double(time_str(i, 19:20)); %second
+%          data_str(i, 1:11) = time_str(i, 1:11);
+%     end 
+    data = time_str;
+    %data(:, 21) = ' ';
+    
+    for i=1:numel(y) 
+        str_y = num2str(y(i));
+        str = [data(i,:), ' ', str_y];
+        len = numel(str);
+        data_str(i, 1:len) = str;
+    end
     
     assignin('base', 'x', x)
-    assignin('base', 'data', data)
-    [FileName, FilePath] = uiputfile({'*.mat';'*.dat';'*.sts';'*.txt';'*.*'}, 'Save as', './Data/Data');
+    assignin('base', 'data_str', data_str)
+    %assignin('base', 'data_str', data_str)
+    [FileName, FilePath] = uiputfile({'*.dat';'*.sts';'*.txt';'*.*'}, 'Save as', './Data/Data');
     
     if ~isequal(FileName, 0)
         %save([FilePath, FileName], 'data')   
-        dlmwrite([FilePath, FileName], 'data', ' ')
+        %dlmwrite([FilePath, FileName], data_str, '')
+        dlmwrite([FilePath, FileName], data_str, '')
     end
 end    
 
