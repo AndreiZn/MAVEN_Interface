@@ -6,7 +6,7 @@ function MagField_B_x(ax, start_time, stop_time, filename, specific_args)
         mf_data = mf_data.mf_data;
     elseif ~isempty(strfind(mf_filename, '.sts'))        
         mf_data = dlmread(mf_filename, '', 145);
-        save([filename(1:numel(filename)-3), 'mat'], 'mf_data')
+        %save([filename(1:numel(filename)-3), 'mat'], 'mf_data')
     end
     
     averind = round(size(mf_data, 1)/2); 
