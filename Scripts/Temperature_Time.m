@@ -106,9 +106,9 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
       
     axes(ax);
     if (log==1)
-        semilogy(epoch, temp, 'color', 'black', 'linewidth', 2)
+        semilogy(epoch, temp, 'linewidth', 2)
     else
-        plot(epoch, temp, 'color', 'black', 'linewidth', 2)
+        plot(epoch, temp, 'linewidth', 2)
     end
 
     datetick('x','HH:MM:SS');
