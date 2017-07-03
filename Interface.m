@@ -814,14 +814,18 @@ function plotbutton_Callback(hObject, eventdata, handles)
                     switch choice
                         case 'Plot using left y-axis'
                             hold (handles.currentaxes, 'on') 
-                            yyaxis (handles.currentaxes, 'left')                      
+                            yyaxis (handles.currentaxes, 'left')
+                            % delete right 'Ytick'
+                            yyaxis (handles.currentaxes, 'right')
+                            set (handles.currentaxes, 'YTick', [])
+                            yyaxis (handles.currentaxes, 'left')
                             set(handles.currentaxes, 'ColorOrder', handles.default_colororder(2:end, :))
                             set(handles.currentaxes, 'LineStyleOrder', handles.default_linestyleorder)
                         case 'Plot using right y-axis'
                             hold (handles.currentaxes, 'on')
                             yyaxis (handles.currentaxes, 'right')
                             set(handles.currentaxes, 'ColorOrder', handles.default_colororder(2:end, :))
-                            set(handles.currentaxes, 'LineStyleOrder', '*')
+                            set(handles.currentaxes, 'LineStyleOrder')
                         case 'Remove current graph and plot a new one' 
                             clearbutton_Callback(hObject, eventdata, handles)
                     end
@@ -896,6 +900,12 @@ function rebuild_all_Callback(hObject, eventdata, handles)
             
             Sysmessage('Please wait. The graphs are being rebuilt _')
             
+            temp_ax = handles.currentaxes; % it's convinient to use the clearbutton function below, but it uses handles.currentaxes
+            
+            for ind=1:numel(handles.axesav)
+                cla(handles.axesav{ind})
+            end    
+            
             for i=1:numel(handles.currentgraphs)
 
                 % get all info about i-currentgraph
@@ -903,7 +913,12 @@ function rebuild_all_Callback(hObject, eventdata, handles)
                 ax = handles.currentgraphs(i).Axes;
                 file = handles.currentgraphs(i).Args.File; %file structure
                 filename = file{1,2};
-
+                
+                %handles.currentaxes = ax;
+                
+                
+                %clearbutton_Callback(hObject, eventdata, handles)
+                
                 % get all of values of arguments
                 args = handles.currentgraphs(i).Args;
                 fieldnms = fieldnames(args);
@@ -919,8 +934,11 @@ function rebuild_all_Callback(hObject, eventdata, handles)
                 cd('./Scripts')
                 feval(fnct, ax, handles.starttime, handles.stoptime, filename, specific_args)
                 cd('../') %get back to the main folder
+                %hold (ax, 'on')
 
             end
+            
+            handles.currentaxes = temp_ax; 
             
             Sysmessage ('The graphs were successfully rebuilt _')
             
@@ -1213,6 +1231,9 @@ end
 function DeleteAxis_Callback(hObject, eventdata, handles)
     
     if (~isempty(handles.currentaxes))
+        
+        % renew "available axes"  
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         j = 0;
         num = numel(handles.axesav);
         temp = cell(1, num-1); % this cell will collect all axes except for the deleted one
@@ -1225,7 +1246,23 @@ function DeleteAxis_Callback(hObject, eventdata, handles)
             end    
         end    
         handles.axesav = temp;
-
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+        % delete info from handles.currentgraphs 
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        delete_ind = []; %delete_ind will contain rows to be deleted from handles.currentgraphs
+        lim = numel(handles.currentgraphs); 
+        for i = 1:lim
+            if (handles.currentgraphs(i).Axes == handles.currentaxes) %compare an axes chosen by a user and i-axes in currentgraphs             
+                delete_ind = [delete_ind, i]; %handles.currentgraphs(i) = [];
+            end
+        end
+    
+        for ind = numel(delete_ind):-1:1
+            handles.currentgraphs(delete_ind(ind)) = []; %clear rows from handles.currentgraphs
+        end  
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
         delete(handles.currentaxes) % delete the actual axis
         
         handles.currentaxes = []; 
