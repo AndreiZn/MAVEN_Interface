@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 24-May-2017 16:37:56
+    % Last Modified by GUIDE v2.5 19-Jul-2017 16:21:43
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -817,7 +817,9 @@ function plotbutton_Callback(hObject, eventdata, handles)
                             yyaxis (handles.currentaxes, 'left')
                             % delete right 'Ytick'
                             yyaxis (handles.currentaxes, 'right')
-                            set (handles.currentaxes, 'YTick', [])
+                            if isequal(get(handles.currentaxes, 'Ylim'), [0 1])
+                                set (handles.currentaxes, 'YTick', [])
+                            end
                             yyaxis (handles.currentaxes, 'left')
                             set(handles.currentaxes, 'ColorOrder', handles.default_colororder(2:end, :))
                             set(handles.currentaxes, 'LineStyleOrder', handles.default_linestyleorder)
@@ -978,55 +980,6 @@ function clearbutton_Callback(hObject, eventdata, handles)
     
     guidata(hObject, handles);
     
-end
-
-function edit4_Callback(hObject, eventdata, handles)
-    usertime = get(hObject, 'String');
-        if (size (usertime, 2) == 8) %if it has the format of 'HH:MM:SS'
-            handles.timecorrectness = 1; 
-            handles.timemassspc = closesttime (handles.epoch, usertime);
-            guidata(hObject, handles);
-            set (hObject, 'String', datestr(handles.epoch(handles.timemassspc), 'HH:MM:SS'))
-            cd ('./Aux_Fncs')
-            Flux_Mass_Plot(handles.currentaxes, handles.filename, handles.timemassspc, handles.massspcparam);
-            cd('../')
-            set(findobj('Tag', 'checkbox7'),'Value', 1)
-            SetAllButtonDownFcn(hObject, handles);
-        else
-            set (hObject, 'String', 'Error! Format is HH:MM:SS')
-            handles.timecorrectness = 0; 
-            guidata(hObject, handles);
-        end
-end
-
-% --- Executes during object creation, after setting all properties.
-function edit4_CreateFcn(hObject, eventdata, handles)
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end
-end
-
-% --- Executes on button press in checkbox2.
-function checkbox2_Callback(hObject, eventdata, handles)
-    if (get(findobj('Tag', 'checkbox2'),'Value')==0)
-        handles.massspcparam = 0;
-        guidata(hObject, handles);
-        if (handles.timecorrectness == 1)
-            cd ('./Aux_Fncs')
-            Flux_Mass_Plot(handles.currentaxes, handles.filename, handles.timemassspc, handles.massspcparam);
-            cd ('../')
-            SetAllButtonDownFcn(hObject, handles);
-        end
-    else
-        handles.massspcparam = 1;
-        guidata(hObject, handles);
-        if (handles.timecorrectness == 1)
-            cd ('./Aux_Fncs')
-            Flux_Mass_Plot(handles.currentaxes, handles.filename, handles.timemassspc, handles.massspcparam);
-            cd ('../')
-            SetAllButtonDownFcn(hObject, handles);
-        end
-    end    
 end
 
 % Save as a picture (screencapture)
@@ -1454,7 +1407,6 @@ end
 
 % --------------------------------------------------------------------
 function PlotData_Callback(hObject, eventdata, handles)
-
     [FileName,PathName] = uigetfile('*.mat','Select the file to be plotted');
     data = open([PathName, FileName]);
     data=data.data;
@@ -1462,4 +1414,22 @@ function PlotData_Callback(hObject, eventdata, handles)
     plot(handles.currentaxes, data(1, :), data(2, :), 'linewidth', 2)
     grid on
     datetick('x','HH:MM:SS');
+end
+
+
+% --------------------------------------------------------------------
+function Toggle_Xlabel_ClickedCallback(hObject, eventdata, handles)
+
+end
+
+
+% --------------------------------------------------------------------
+function Toggle_Xlabel_OffCallback(hObject, eventdata, handles)
+
+end
+
+
+% --------------------------------------------------------------------
+function Toggle_Xlabel_OnCallback(hObject, eventdata, handles)
+
 end
