@@ -1,11 +1,11 @@
-function MagField_B_y(ax, start_time, stop_time, filename, specific_args)
+function By_divided_by_Bz(ax, start_time, stop_time, filename, specific_args)
     
     mf_filename = filename;
     if ~isempty(strfind(mf_filename, '.mat'))
         mf_data = open(mf_filename);
         mf_data = mf_data.mf_data;
     elseif ~isempty(strfind(mf_filename, '.sts'))        
-        mf_data = dlmread(mf_filename, '', 145);
+        mf_data = dlmread(mf_filename, '', 300);
         %save([filename(1:numel(filename)-3), 'mat'], 'mf_data')
     end
     
@@ -20,13 +20,14 @@ function MagField_B_y(ax, start_time, stop_time, filename, specific_args)
     mf_data2 = mf_data(choose_ind, :);
 
     By = mf_data2(:, 9);
+    Bz = mf_data2(:, 10);
     
     axes (ax); 
 
-    plot(mf_data2(:,7), By, 'linewidth', 0.5)
+    plot(mf_data2(:,7), By./Bz, 'linewidth', 0.5)
     
     datetick('x','HH:MM:SS');
-    ylabel('B_y, nT')
+    ylabel('B_y/B_z')
     grid on
     set (ax, 'fontsize', 8);
     

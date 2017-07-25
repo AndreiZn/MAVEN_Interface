@@ -1,6 +1,19 @@
 function MagField_B(ax, start_time, stop_time, filename, specific_args)
     
     mf_filename = filename;
+    
+    name = filename(1:numel(filename)-4); %path + filename without an extension
+    name = name(end-29:end); % only filename without and extension
+    name = ['mag_', name]; % so that it always starts with letters
+    
+%     if ~exist(name, 'var') %if a variable with magnetic field data dosesn't exist 
+%         mf_data = dlmread(mf_filename, '', 145);
+%         assignin('base', name, mf_data)
+%     else        
+%         assignin('base', 'mf_data', name)
+%     end
+    
+      %save([filename(1:numel(filename)-3), 'mat'], 'mf_data')    
     if ~isempty(strfind(mf_filename, '.mat'))
         mf_data = open(mf_filename);
         mf_data = mf_data.mf_data;
@@ -25,7 +38,7 @@ function MagField_B(ax, start_time, stop_time, filename, specific_args)
     
     axes(ax); 
 
-    plot(mf_data2(:,7), B, 'linewidth', 2)
+    plot(mf_data2(:,7), B, 'linewidth', 0.5)
     
     datetick('x','HH:MM:SS');
     ylabel('B, nT')

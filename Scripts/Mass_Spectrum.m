@@ -17,9 +17,9 @@ function Mass_Spectrum(ax, start_time, stop_time, filename, specific_args)
     eflux_sum = squeeze(sum(eflux, 2));
     
     if log==1
-        semilogy (squeeze(mass_arr(16, swp_ind(timenum)+1, :)), squeeze(eflux_sum(:,timenum)));
+        semilogy (squeeze(mass_arr(16, swp_ind(timenum)+1, :)), squeeze(eflux_sum(:,timenum)), 'linewidth', 0.5);
     else
-        plot (squeeze(mass_arr(16, swp_ind(timenum)+1, :)), squeeze(eflux_sum(:,timenum)));
+        plot (squeeze(mass_arr(16, swp_ind(timenum)+1, :)), squeeze(eflux_sum(:,timenum)), 'linewidth', 0.5);
     end
     xlabel = num2str(squeeze(round(mass_arr(16, swp_ind(timenum)+1, :))));
     xlabel(2:8, :) = ' '; xlabel(10:14, :) = ' '; xlabel(16:18, :) = ' '; 

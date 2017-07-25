@@ -1,5 +1,5 @@
-function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %d1 file is being used
-    
+function Pitch_Angle_Time (ax, start_time, stop_time, filename, specific_args) %d1 file is being used
+
     mass = specific_args{1, 1}; 
     log = specific_args{1, 2};
     
@@ -7,15 +7,15 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
     eflux = spdfcdfread(filename, 'variables', 'eflux');
     energy = spdfcdfread(filename, 'variables', 'energy');
     denergy = spdfcdfread(filename, 'variables', 'denergy');
-    theta = spdfcdfread(filename, 'variables', 'theta');
-    phi = spdfcdfread(filename, 'variables', 'phi');
     domega = spdfcdfread(filename, 'variables', 'domega');
     swp_ind = spdfcdfread(filename, 'variables', 'swp_ind');
     mass_arr = spdfcdfread(filename, 'variables', 'mass_arr');
     nenergy = spdfcdfread(filename, 'variables', 'nenergy');
     nanode = spdfcdfread(filename, 'variables', 'nanode');
     ndef = spdfcdfread(filename, 'variables', 'ndef');
-    quat_mso = spdfcdfread(filename, 'variables', 'quat_mso');
+    theta = spdfcdfread(filename, 'variables', 'theta');
+    phi = spdfcdfread(filename, 'variables', 'phi');
+    magf = spdfcdfread(filename, 'variables', 'magf');
     
     start_str = start_time; stop_str = stop_time; %save str version of start, stop times
     %time 
@@ -23,7 +23,10 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
     start_time = find (difference == min(difference), 1);
     difference = abs(datenum(datestr(epoch, 'HH:MM:SS')) - datenum(stop_time));
     stop_time = find (difference == min(difference), 1);
-    
+
+    q = 1.602177335e-19;
+    aem = 1.66054021010e-27;
+
     timefrom = datenum(epoch(start_time));
     timeto = datenum(epoch(stop_time));
 
@@ -32,19 +35,15 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
     eflux = eflux(:, :, :, choose_ind);
     swp_ind = swp_ind(choose_ind);
 
-    q = 1.602177335e-19;
-    aem = 1.66054021010e-27;
-
     theta = theta*pi/180;
     phi = phi*pi/180;
-
+    
     d_mass = 3; %a.u. (accuracy)
     swpind = swp_ind(1);
     m = mass_arr(16, swpind+1, 1, :);
     mass_num_range = find(( m>(mass-d_mass) )&( m<(mass+d_mass) ));
     mass_num = round((mass_num_range(1)+mass_num_range(end))/2);
-    
-    
+
     onemass_eflux = reshape( sum(eflux(:, :, mass_num_range, :), 3), [size(eflux, 1) size(eflux, 2) size(eflux, 4)] );
     v = 1*sqrt(2*q*energy./(aem*mass_arr));
 
@@ -57,7 +56,6 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
 
     concentration = zeros(length(epoch), 1);
     v_st = zeros(length(epoch), 3);
-    temp = zeros(length(epoch), 1);
     for timenum = 1:length(epoch)
         for en = 1:nenergy
             for nphi = 1:nanode
@@ -81,40 +79,48 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
     for i=1:3
         v_st(:, i) = v_st(:, i)./concentration;
     end
-
-    for timenum = 1:length(epoch)
-        for en = 1:nenergy
-            for nphi = 1:nanode
-                for ntheta = 1:ndef
-                    bin = ndef*(nphi-1)+ntheta;
-                        swp_i = swp_ind(timenum);
-                        v_ccl = v(en,swp_i+1,bin,mass_num);
-                        ph = phi(en,swp_i+1,bin,mass_num); 
-                        tht = theta(en,swp_i+1,bin,mass_num); 
-                        %m_arr = mass_arr(en,swp_i+1,bin,mass_num);
-                        
-                        %volume = q*v_ccl*domega(en,swp_i+1,bin,mass_num)*denergy(en,swp_i+1,bin,mass_num)/(aem*m_arr);
-                        %cur_v = v_ccl*[cos(ph)*cos(tht),sin(ph)*cos(tht),sin(tht)];
-                        %temp(timenum) = temp(timenum) + aem*m_arr*sum((cur_v-v_st(timenum)).^2)*phsdensity(bin, en, timenum)*volume;
-                        volume = q*v_ccl*domega(en,swp_i+1,bin,mass_num)*denergy(en,swp_i+1,bin,mass_num);
-                        temp(timenum) = temp(timenum) + sum((v_ccl*[cos(ph)*cos(tht),sin(ph)*cos(tht),sin(tht)]-v_st(timenum)).^2)*phsdensity(bin, en, timenum)*volume;
-                end
-            end
-        end
-    end
-    temp = temp./(3*q*concentration);
-      
+    %v_mso = quatrotate(quatinv(quat_mso), v_st);
+    %B is in static coordinates
+    
+    Vx = v_st(:,1); Vy = v_st(:,2); Vz = v_st(:,3);
+    V = sqrt(Vx.^2 + Vy.^2 + Vz.^2);
+    
+    mf = magf (choose_ind, :);  
+    Bx = mf(:, 1); By = mf(:, 2); Bz = mf(:, 3);
+    B = sqrt(Bx.^2 + By.^2 + Bz.^2);
+    
+    alpha = acos((Vx.*Bx + Vy.*By + Vz.*Bz)./(V.*B));
+    assignin('base', 'rel', (Vx.*Bx + Vy.*By + Vz.*Bz)./(V.*B));
+    alpha = alpha*180/pi;
+    
     axes(ax);
+    
     if (log==1)
-        semilogy(epoch, temp, 'linewidth', 0.5)
+        semilogy(epoch, alpha, 'linewidth', 0.5)
     else
-        plot(epoch, temp, 'linewidth', 0.5)
+        plot(epoch, alpha, 'linewidth', 0.5)
     end
-
+    
+    if mass == 1
+        ylab = 'H+';
+    elseif mass == 4
+        ylab = 'He+';
+    elseif mass == 12
+        ylab = 'C+';    
+    elseif mass == 16
+        ylab = 'O+';
+    elseif mass == 32
+        ylab = 'O_2+';
+    elseif mass == 44
+        ylab = 'CO_{2}+';    
+    end  
+    
     datetick('x','HH:MM:SS');
     grid on
-    ylabel('T, eV')
-    set (ax, 'fontsize', 8);
+    ylabel(['Pitch Angle, ', ylab])
+    ylim = get(ax, 'ylim');
+    yl1 = ylim(1);
+    set (ax, 'fontsize', 8, 'ylim', [yl1, 180]);
     
     %xlim
     averind = round(size(epoch, 1)/2);

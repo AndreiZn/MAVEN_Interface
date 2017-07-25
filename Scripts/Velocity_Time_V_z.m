@@ -85,9 +85,9 @@ function Velocity_Time_V_z (ax, start_time, stop_time, filename, specific_args) 
     axes(ax);
     
     if (log==1)
-        semilogy(epoch, v_mso(:, 3)/1e3, 'linewidth', 2)
+        semilogy(epoch, v_mso(:, 3)/1e3, 'linewidth', 0.5)
     else
-        plot(epoch, v_mso(:, 3)/1e3, 'linewidth', 2)
+        plot(epoch, v_mso(:, 3)/1e3, 'linewidth', 0.5)
     end
     
     datetick('x','HH:MM:SS');
