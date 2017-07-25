@@ -25,7 +25,7 @@ function NumberDensity_Time(ax, start_time, stop_time, filename, specific_args) 
     timeto = datenum(epoch(stop_time));
     
     q = 1.602177335e-19;
-    aem = 1.66054021010e-27;
+    aem = 1.66054021010e-24;
     
     choose_ind = find(epoch>=timefrom & epoch<=timeto);
     epoch = epoch(choose_ind);
@@ -67,9 +67,9 @@ function NumberDensity_Time(ax, start_time, stop_time, filename, specific_args) 
 
     axes(ax);
     if (log==1)
-        semilogy(epoch, concentration/1e6, 'linewidth', 2)
+        semilogy(epoch, concentration/1e6, 'linewidth', 0.5)
     else
-        plot(epoch,concentration/1e6, 'linewidth', 2)
+        plot(epoch,concentration/1e6, 'linewidth', 0.5)
     end
     
     ylabel('n, cm^{-3}')

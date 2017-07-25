@@ -1,4 +1,4 @@
-function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %d1 file is being used
+function nkT (ax, start_time, stop_time, filename, specific_args) %d1 file is being used
     
     mass = specific_args{1, 1}; 
     log = specific_args{1, 2};
@@ -16,6 +16,7 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
     nanode = spdfcdfread(filename, 'variables', 'nanode');
     ndef = spdfcdfread(filename, 'variables', 'ndef');
     quat_mso = spdfcdfread(filename, 'variables', 'quat_mso');
+    k = 1.38e-23;
     
     start_str = start_time; stop_str = stop_time; %save str version of start, stop times
     %time 
@@ -33,7 +34,7 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
     swp_ind = swp_ind(choose_ind);
 
     q = 1.602177335e-19;
-    aem = 1.66054021010e-27;
+    aem = 1.66054021010e-24;
 
     theta = theta*pi/180;
     phi = phi*pi/180;
@@ -103,17 +104,18 @@ function Temperature_Time (ax, start_time, stop_time, filename, specific_args) %
         end
     end
     temp = temp./(3*q*concentration);
-      
+    y_value = k*concentration.*temp;
+    
     axes(ax);
     if (log==1)
-        semilogy(epoch, temp, 'linewidth', 0.5)
+        semilogy(epoch, y_value, 'linewidth', 0.5)
     else
-        plot(epoch, temp, 'linewidth', 0.5)
+        plot(epoch, y_value, 'linewidth', 0.5)
     end
 
     datetick('x','HH:MM:SS');
     grid on
-    ylabel('T, eV')
+    ylabel('nkT, J*cm^{-3}')
     set (ax, 'fontsize', 8);
     
     %xlim
