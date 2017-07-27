@@ -22,7 +22,7 @@ function varargout = AxesDesign(varargin)
 
     % Edit the above text to modify the response to help AxesDesign
 
-    % Last Modified by GUIDE v2.5 24-May-2017 15:11:24
+    % Last Modified by GUIDE v2.5 27-Jul-2017 15:49:42
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -60,9 +60,7 @@ function AxesDesign_OpeningFcn(hObject, eventdata, handles, varargin)
     ylabel_CreateFcn(findobj('Tag', 'ylabel'), eventdata, handles);    
     y_min_CreateFcn(findobj('Tag', 'y_min'), eventdata, handles);
     y_max_CreateFcn(findobj('Tag', 'y_max'), eventdata, handles);
-    r_ylabel_CreateFcn(findobj('Tag', 'r_ylabel'), eventdata, handles);    
-    r_y_min_CreateFcn(findobj('Tag', 'r_y_min'), eventdata, handles);
-    r_y_max_CreateFcn(findobj('Tag', 'r_y_max'), eventdata, handles);
+    logscale_checkbox_CreateFcn(findobj('Tag', 'logcale_checkbox'), eventdata, handles)
     Legend_CreateFcn(findobj('Tag', 'Legend'), eventdata, handles)
     colormap_min_CreateFcn(findobj('Tag', 'colormap_min'), eventdata, handles);
     colormap_max_CreateFcn(findobj('Tag', 'colormap_max'), eventdata, handles);
@@ -116,7 +114,6 @@ function ylabel_CreateFcn(hObject, eventdata, handles)
         set(hObject,'BackgroundColor','white');
     end
     if ~isempty (handles)
-        yyaxis(handles.Interface_handles.currentaxes, 'left')
         ylab_text = get(handles.Interface_handles.currentaxes, 'ylabel');
         ylab_str = get(ylab_text, 'String');
         set(hObject, 'String', ylab_str)
@@ -131,7 +128,6 @@ function y_min_CreateFcn(hObject, eventdata, handles)
         set(hObject,'BackgroundColor','white');
     end
     if ~isempty (handles)
-        yyaxis(handles.Interface_handles.currentaxes, 'left')
         ylim = get(handles.Interface_handles.currentaxes, 'ylim');
         set(hObject, 'String', ylim(1))
     end
@@ -145,52 +141,32 @@ function y_max_CreateFcn(hObject, eventdata, handles)
         set(hObject,'BackgroundColor','white');
     end 
     if ~isempty (handles)
-        yyaxis(handles.Interface_handles.currentaxes, 'left')
         ylim = get(handles.Interface_handles.currentaxes, 'ylim');
         set(hObject, 'String', ylim(2))
     end
-
-function r_ylabel_Callback(hObject, eventdata, handles)
-
+    
 % --- Executes during object creation, after setting all properties.
-function r_ylabel_CreateFcn(hObject, eventdata, handles)
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
+function logscale_checkbox_CreateFcn(hObject, eventdata, handles)
+	
+    if ~isempty(handles)
+        scale = get(handles.Interface_handles.currentaxes, 'YScale');
+        assignin('base', 'scale', scale)
+        if strcmp(scale, 'linear')
+            set (findobj('Tag', 'logcale_checkbox'), 'Value', 0)
+        elseif strcmp(scale, 'log')
+            set (findobj('Tag', 'logcale_checkbox'), 'Value', 1)
+        end    
+    end
+    
+% --- Executes on button press in logscale_checkbox.
+function logscale_checkbox_Callback(hObject, eventdata, handles)
+
+    t = get(hObject,'Value');
+    if t == 1
+        set (handles.Interface_handles.currentaxes, 'YScale', 'log')
+    else
+        set (handles.Interface_handles.currentaxes, 'YScale', 'linear')
     end   
-    if ~isempty (handles)
-        yyaxis(handles.Interface_handles.currentaxes, 'right')
-        ylab_text = get(handles.Interface_handles.currentaxes, 'ylabel');
-        ylab_str = get(ylab_text, 'String');
-        set(hObject, 'String', ylab_str)
-    end
-
-function r_y_min_Callback(hObject, eventdata, handles)
-
-% --- Executes during object creation, after setting all properties.
-function r_y_min_CreateFcn(hObject, eventdata, handles)
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end
-    if ~isempty (handles)
-        yyaxis(handles.Interface_handles.currentaxes, 'right')
-        ylim = get(handles.Interface_handles.currentaxes, 'ylim');
-        set(hObject, 'String', ylim(1))
-    end    
-    
-function r_y_max_Callback(hObject, eventdata, handles)
-
-% --- Executes during object creation, after setting all properties.
-function r_y_max_CreateFcn(hObject, eventdata, handles)
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end
-    if ~isempty (handles)
-        yyaxis(handles.Interface_handles.currentaxes, 'right')
-        ylim = get(handles.Interface_handles.currentaxes, 'ylim');
-        set(hObject, 'String', ylim(2))
-    end 
-
-    
     
 % --- Executes on button press in legend_checkbox.
 function legend_checkbox_Callback(hObject, eventdata, handles)
@@ -215,7 +191,7 @@ function legend_checkbox_Callback(hObject, eventdata, handles)
         legend(handles.Interface_handles.currentaxes, 'off');
         set (findobj('Tag', 'Legend'), 'String', '')
     end    
-    
+         
 function Legend_Callback(hObject, eventdata, handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -251,9 +227,6 @@ function SetButton_Callback(hObject, eventdata, handles)
     ylab = get(handles.ylabel, 'String');
     ylim1 = str2double(get(handles.y_min, 'String'));
     ylim2 = str2double(get(handles.y_max, 'String'));
-    r_ylab = get(handles.r_ylabel, 'String');
-    r_ylim1 = str2double(get(handles.r_y_min, 'String'));
-    r_ylim2 = str2double(get(handles.r_y_max, 'String'));
     if get(findobj('Tag', 'legend_checkbox'), 'Value') == 1
         leg_str = get(findobj('Tag', 'Legend'), 'String');
         leg_cell = strsplit(leg_str,',');
@@ -262,12 +235,7 @@ function SetButton_Callback(hObject, eventdata, handles)
     
     xlabel(xlab)
     title(ttl)
-    
-    yyaxis(handles.Interface_handles.currentaxes, 'right')
-    ylabel(r_ylab)
-    ylim([r_ylim1 r_ylim2])
-    
-    yyaxis(handles.Interface_handles.currentaxes, 'left')
+
     ylabel(ylab)
     ylim([ylim1 ylim2])
     
@@ -286,7 +254,7 @@ function colormap_min_CreateFcn(hObject, eventdata, handles)
     end
     set(hObject, 'String', 'not applicable')
     if ~isempty (handles)       
-        yyaxis(handles.Interface_handles.currentaxes, 'left')
+        
         chld = get(handles.Interface_handles.currentaxes, 'Children');
         if isa(chld, 'matlab.graphics.primitive.Surface')            
             CLim = get(handles.Interface_handles.currentaxes, 'CLim');

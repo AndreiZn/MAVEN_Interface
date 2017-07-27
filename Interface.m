@@ -806,7 +806,7 @@ function plotbutton_Callback(hObject, eventdata, handles)
                 % check whether the current axis is empty or not
                 if ~is_current_ax_empty(handles.currentgraphs, handles.currentaxes)
                     
-                    choice = questdlg('You are trying to plot another graph on this axis. Please choose one of the options.', 'Plotting options', 'Plot using left y-axis', 'Plot using right y-axis', 'Remove current graph and plot a new one', 'Plot using left y-axis');
+                    choice = questdlg('You are trying to plot another graph on this axis. Please choose one of the options.', 'Plotting options', 'Plot using left y-axis', 'Remove current graph and plot a new one', 'Plot using left y-axis');
                     
                     Sysmessage (['Please wait. "', chosen_fnct, '" is being plotted'])  
                     
@@ -814,20 +814,8 @@ function plotbutton_Callback(hObject, eventdata, handles)
                     switch choice
                         case 'Plot using left y-axis'
                             hold (handles.currentaxes, 'on') 
-                            yyaxis (handles.currentaxes, 'left')
-                            % delete right 'Ytick'
-                            yyaxis (handles.currentaxes, 'right')
-                            if isequal(get(handles.currentaxes, 'Ylim'), [0 1])
-                                set (handles.currentaxes, 'YTick', [])
-                            end
-                            yyaxis (handles.currentaxes, 'left')
-                            set(handles.currentaxes, 'ColorOrder', handles.default_colororder(2:end, :))
-                            set(handles.currentaxes, 'LineStyleOrder', handles.default_linestyleorder)
-                        case 'Plot using right y-axis'
-                            hold (handles.currentaxes, 'on')
-                            yyaxis (handles.currentaxes, 'right')
-                            set(handles.currentaxes, 'ColorOrder', handles.default_colororder(2:end, :))
-                            set(handles.currentaxes, 'LineStyleOrder')
+                            %set(handles.currentaxes, 'ColorOrder', handles.default_colororder(2:end, :))
+                            %set(handles.currentaxes, 'LineStyleOrder', handles.default_linestyleorder)
                         case 'Remove current graph and plot a new one' 
                             clearbutton_Callback(hObject, eventdata, handles)
                     end
@@ -835,8 +823,15 @@ function plotbutton_Callback(hObject, eventdata, handles)
                     if ~isempty(choice)
                         % run the chosen_fnct with arguments from the "Scripts" Folder
                         cd('./Scripts')
-                        feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
-                        cd('../') % get back to the main folder 
+                        try
+                            feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
+                            cd('../') % get back to the main folder 
+                        catch ME
+                              assignin('base', 'ME', ME)
+                              cd('../') % get back to the main folder 
+                              rethrow(ME)                              
+                        end
+                        
                     end
                 else
                     Sysmessage (['Please wait. "', chosen_fnct, '" is being plotted']) 
@@ -913,8 +908,8 @@ function rebuild_all_Callback(hObject, eventdata, handles)
                 % get all info about i-currentgraph
                 fnct = handles.currentgraphs(i).Script; 
                 ax = handles.currentgraphs(i).Axes;
-                file = handles.currentgraphs(i).Args.File; %file structure
-                filename = file{1,2};
+                %file = handles.currentgraphs(i).Args.File; %file structure
+                %filename = file{1,2};
                 
                 %handles.currentaxes = ax;
                 
@@ -934,7 +929,7 @@ function rebuild_all_Callback(hObject, eventdata, handles)
 
                 %runc the chosen_fnct with arguments from the "Scripts" Folder
                 cd('./Scripts')
-                feval(fnct, ax, handles.starttime, handles.stoptime, filename, specific_args)
+                feval(fnct, ax, handles.starttime, handles.stoptime, handles.filename, specific_args)
                 cd('../') %get back to the main folder
                 %hold (ax, 'on')
 
