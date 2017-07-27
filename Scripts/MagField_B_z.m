@@ -1,13 +1,18 @@
 function MagField_B_z(ax, start_time, stop_time, filename, specific_args)
     
     mf_filename = filename;
-    if ~isempty(strfind(mf_filename, '.mat'))
-        mf_data = open(mf_filename);
-        mf_data = mf_data.mf_data;
-    elseif ~isempty(strfind(mf_filename, '.sts'))        
-        mf_data = dlmread(mf_filename, '', 1000);
-        %save([filename(1:numel(filename)-3), 'mat'], 'mf_data')
+    
+    fileID=fopen(mf_filename,'r');
+    tline = fgetl(fileID);
+    headersNumber=0;
+    while ~strcmp(tline(1:4),'  20')
+        headersNumber=headersNumber+1;
+        tline = fgetl(fileID);
     end
+    frewind(fileID);
+    tline = fgetl(fileID);
+    fclose(fileID);
+    mf_data = dlmread(mf_filename, '', headersNumber);
     
     averind = round(size(mf_data, 1)/2); 
     day = [datestr(mf_data(averind,7), 'dd-mmm'), '-', num2str(mf_data(averind, 1))]; 

@@ -31,7 +31,7 @@ function Eflux_Time_Plot (ax, start_time, stop_time, filename, specific_args)
         plot (epoch(start_time:stop_time), fdist, 'linewidth', 0.5);
     end
     
-    ylabel(['Flux for ', num2str(round(mass)), 'a.u.'])
+    ylabel(['Eflux for ', num2str(round(mass)), 'a.u.'])
     datetick('x','HH:MM:SS');
     set (ax, 'fontsize', 8);
     grid on   
