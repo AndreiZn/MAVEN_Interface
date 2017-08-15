@@ -190,7 +190,8 @@ function legend_checkbox_Callback(hObject, eventdata, handles)
     else
         legend(handles.Interface_handles.currentaxes, 'off');
         set (findobj('Tag', 'Legend'), 'String', '')
-    end    
+    end 
+    set(handles.Interface_handles.currentaxes, 'YLimMode', 'auto')
          
 function Legend_Callback(hObject, eventdata, handles)
 

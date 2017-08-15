@@ -56,7 +56,6 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     
     % Files and times:    
     handles.filename = '';
-    handles.filefound = 0; %1 if a file of a necessary type and date was found
     handles.starttime = get(findobj('Tag', 'start_editbox'), 'String');
     handles.stoptime = get(findobj('Tag', 'stop_editbox'), 'String');
     
@@ -113,6 +112,9 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     % with files
     handles.Sysmesnofiles = ('The folder with files was not chosen');
     
+    % Equals 1 when a graph was successfully plotted
+    handles.plotted = 0;
+    
     % handles of all axes available
     handles.axesav = {handles.axes1, handles.axes2, handles.axes3, handles.axes4, handles.axes5};
     
@@ -127,6 +129,8 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.AxDesignOpen = 0;
     
     SetAllButtonDownFcn(hObject, handles);
+    
+    handles.date = '';
     
     % Set the current data value.
     % Choose default command line output for Interface
@@ -160,6 +164,9 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     
     listbox2_CreateFcn(findobj('Tag', 'listbox2'), eventdata, handles)
     listbox2_Callback(findobj('Tag', 'listbox2'), eventdata, handles);
+    
+    %read the initial date from the date_editbox
+    date_editbox_CreateFcn(findobj('Tag', 'date_editbox'), eventdata, handles)
     
 end 
 
@@ -551,35 +558,6 @@ function static_panel_ButtonDownFcn(hObject, eventdata, handles)
     
 end
 
-% This function gets file names, a year, a month and a day and returns those files from fls that contain 'ymd' 
-function [fls2] = files_relatedto_date(fls, y, m, d)
-
-    p_frd = 1;
-    fls2{p_frd} = [];
-    for ind_frd=1:size(fls, 1)
-        if ( ~isempty( findstr([y,m,d], fls{ind_frd}) ) )
-            fls2{p_frd} = fls{ind_frd};
-            p_frd = p_frd + 1;
-        end
-    end
-    
-end
-
-function [fls_out] = files_with_extension (fls, extension) % find files with extension 'extension' among files 'fls'
-    
-    p_fwe = 1;
-    fls_out{1} = '';
-    for ind_fwe = 1:numel(fls)
-        f = fls{ind_fwe}; % 'filename.ext' 
-        k = strfind (f, extension);
-        if ~isempty(k)
-            fls_out{p_fwe} = f; 
-            p_fwe = p_fwe + 1;
-        end    
-    end    
-
-end
-
 % --- Executes on selection change in listbox2.
 function listbox2_Callback(hObject, eventdata, handles)
 
@@ -630,81 +608,11 @@ function listbox2_Callback(hObject, eventdata, handles)
                 %it's necessary to save all objects created to delete them later. 
                 %This information is saved in handles.argobj      
                 handles.temphndl = [handles.argpanel(i), handles.lst_with_args(i)];
-                handles.argobj = [handles.argobj, handles.temphndl];       
+                handles.argobj = [handles.argobj, handles.temphndl];  
+                
 
-                if (isequal(field_i, 'File'))
-
-                    filetype = args_i{1}(1); % because that's how the file-wise part of Args looks like: field1 = 'filetype'; value1 = {{'c6', ''}}; Args = struct(field1, {value1});
-                    %so we get, for example,  'c6' out of it.
-                    filetype = filetype{1}; %to make it a sring
-
-                    %getting the date            
-                    date = get(findobj('Tag', 'date_editbox'), 'String'); %date has a format of 20-Mar-2017
-                    datev = datevec(date); %datev = [2017 3 20 ...]
-                    handles.year = num2str(datev(1)); % '2017'
-
-                    handles.month = num2str(datev(2)); % '3'            
-                    if isequal(size(handles.month, 2), 1)
-                        handles.month = ['0', handles.month];
-                    end            
-
-                    handles.day = num2str(datev(3));
-                    if isequal(size(handles.day, 2), 1)
-                        handles.day = ['0', handles.day];
-                    end 
-
-
-                    %filepath
-                    filepath = [handles.filefolderpath, '\', filetype,'\', handles.year, '\', handles.month];
-
-                    files = dir(filepath); %all files and folders from the address = filepath 
-                    files = {files(3:end).name}'; %delete first two folders, because they are always '.' and '..'
-                    
-                    %checking whether the folder has any files
-                    if (isempty(files))
-                        message = ['There are no files of ', filetype, ' type for ', date, ' at ', handles.filefolderpath, ', which are necessary for ', handles.chosenfunc];
-                        Sysmessage(message); %send message to the Sysmessage edit box
-                        handles.filefound = 0; %a file was not found
-                    else
-                        %find all files related to the chosen date
-                        %files2 will contain all files related to the date = 'date'              
-                        files2 = files_relatedto_date(files, handles.year, handles.month, handles.day);
-                        
-                        % find files with necessary extension
-                        temp_files = {''}; % this variable collects files with extension 'ext' (see below)
-                        
-                        for extension_ind = 2:numel(args_i)    
-                            if ~isequal(temp_files, {''})
-                                break
-                            else    
-                                ext = args_i{extension_ind}(2); % extension. e.g, .mat
-                                ext = ext{1}; % to make it a string                            
-                                temp_files = files_with_extension (files2, ext); % find file with extension 'ext' among files2
-                            end    
-                        end
-                        assignin('base', 'files', temp_files)
-                        if isempty(temp_files)
-                            Sysmessage ('No files with chosen extension')
-                        else
-                            files2 = temp_files{1}; %if the variable 'temp_files' still has several files we choose the first one                
-                        end    
-                        
-                        %checking whether the folder has necessary files
-                        if (isempty(files2))
-                            message = ['There are no files of ', filetype, ' type for ', date, ' at ', handles.filefolderpath, ', which are necessary for ', handles.chosenfunc];
-                            Sysmessage(message); %send message to the Sysmessage edit box
-                            handles.filefound = 0; %a file was not found
-                        else
-                            %finally, a path to the file:
-                            fpath = [filepath, '\', files2];
-                            handles.Args.(field_i){1}{2} = fpath;                    
-                            handles.filename = fpath;
-                            Sysmessage(['"', files2, '"', ' was successfully uploaded and the system is ready to plot ', handles.chosenfunc]);
-                            handles.filefound = 1; %a file was found
-                        end
-                    end 
-                end % if field_i == 'file'
             end % if dscrp == 'listbox'
+
             
             if strcmp(dscrp_i, 'editbox')
                 
@@ -754,7 +662,7 @@ function plotbutton_Callback(hObject, eventdata, handles)
     
     if (handles.axeschosen == 1)
         if (handles.filefolderchosen == 1)
-            if (handles.filefound == 1)
+            
                 
                 lst_with_fncts = findobj('Tag', 'listbox2'); %lst_with_fncts - listbox with function names
                 contents = cellstr(get(lst_with_fncts,'String'));%all names of functions from the listbox with functions
@@ -791,15 +699,14 @@ function plotbutton_Callback(hObject, eventdata, handles)
                         args_i = handles.Args.(field_i);
                         
                         str = get (handles.edbox(i), 'String'); % user's input
-                        assignin('base', 'args_i', args_i)
+                        
                         args_i{1}{2} = str;
                         
                         specific_args{1, i} = str;
                         chosen_Args.(field_i) = args_i; 
                     end
                     
-                    assignin('base', 'spec_Args', specific_args)
-                    assignin('base', 'chosen_Args', chosen_Args)
+                    
                 end
                 
                 
@@ -808,61 +715,78 @@ function plotbutton_Callback(hObject, eventdata, handles)
                     
                     choice = questdlg('You are trying to plot another graph on this axis. Please choose one of the options.', 'Plotting options', 'Plot using left y-axis', 'Remove current graph and plot a new one', 'Plot using left y-axis');
                     
-                    Sysmessage (['Please wait. "', chosen_fnct, '" is being plotted'])  
-                    
-                    
                     switch choice
                         case 'Plot using left y-axis'
                             hold (handles.currentaxes, 'on') 
-                            %set(handles.currentaxes, 'ColorOrder', handles.default_colororder(2:end, :))
-                            %set(handles.currentaxes, 'LineStyleOrder', handles.default_linestyleorder)
                         case 'Remove current graph and plot a new one' 
                             clearbutton_Callback(hObject, eventdata, handles)
                     end
                     
                     if ~isempty(choice)
                         % run the chosen_fnct with arguments from the "Scripts" Folder
+                        Sysmessage (['Please wait. "', chosen_fnct, '" is being plotted'])
                         cd('./Scripts')
-                        try
-                            feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
+                        try       
+                            [message, error] = feval(chosen_fnct, handles.currentaxes, handles.filefolderpath, handles.date, handles.starttime, handles.stoptime, specific_args); 
                             cd('../') % get back to the main folder 
-                        catch ME
-                              assignin('base', 'ME', ME)
+                            Sysmessage(message)
+                            switch error
+                                case '0_no_error'                                    
+                                    handles.plotted = 1;
+                                case '1_no_files' 
+                                    handles.plotted = 0;
+                                case '2_no_files_ext'  
+                                    handles.plotted = 0;
+                            end
+                            
+                        catch ME                              
                               cd('../') % get back to the main folder 
+                              handles.plotted = 0;
                               rethrow(ME)                              
-                        end
+                        end     
                         
                     end
                 else
                     Sysmessage (['Please wait. "', chosen_fnct, '" is being plotted']) 
-                    % run the chosen_fnct with arguments from the "Scripts" Folder
                     cd('./Scripts')
-                    feval(chosen_fnct, handles.currentaxes, handles.starttime, handles.stoptime, handles.filename, specific_args)
-                    cd('../') % get back to the main folder
+                        try
+                            [message, error] = feval(chosen_fnct, handles.currentaxes, handles.filefolderpath, handles.date, handles.starttime, handles.stoptime, specific_args); 
+                            cd('../') % get back to the main folder 
+                            
+                            Sysmessage(message)
+                            switch error
+                                case '0_no_error'
+                                    handles.plotted = 1;
+                                case '1_no_files' 
+                                    handles.plotted = 0;
+                                case '2_no_files_ext'  
+                                    handles.plotted = 0;
+                            end
+                            
+                        catch ME                              
+                              cd('../') % get back to the main folder 
+                              handles.plotted = 0;
+                              rethrow(ME)                              
+                        end
                 end    
-                Sysmessage ([chosen_fnct, ' was successfully plotted _'])             
                 
-                % add info about the plotted graph to handles.currentgraphs
-                if (isempty(handles.currentgraphs)) % handles.currentgraphs is initialized with empty fields to set the structure of this variable
-                    handles.currentgraphs = struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', chosen_Args); %this empty line is rewritten
-                else 
-                    handles.currentgraphs = [handles.currentgraphs, struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', chosen_Args)];
-                end            
                 
-                % handles.filefound = 0; % otherwise mistakes are possible, e.g., 
-                % if in *_Args 'File' had been written as 'file', program would have plotted
-                % *.m, but using a wrong file
-                % handles.filename = ''; 
+                if handles.plotted == 1
+                    Sysmessage ([chosen_fnct, ' was successfully plotted _'])
+                    % add info about the plotted graph to handles.currentgraphs
+                    if (isempty(handles.currentgraphs)) % handles.currentgraphs is initialized with empty fields to set the structure of this variable
+                        handles.currentgraphs = struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', chosen_Args); %this empty line is rewritten
+                    else 
+                        handles.currentgraphs = [handles.currentgraphs, struct('Script', {chosen_fnct}, 'Axes', handles.currentaxes, 'Args', chosen_Args)];
+                    end            
+                end
                 
                 assignin('base', 'currentgraphs', handles.currentgraphs)
 
                 SetAllButtonDownFcn(hObject, handles);
                 
                 guidata(hObject, handles);
-                
-            else
-                Sysmessage('There are no files of the necessary type for the chosen date _'); %send message to the Sysmessage edit box
-            end    
+                  
         else   
             Sysmessage (handles.Sysmesnofiles)
         end
@@ -893,7 +817,7 @@ end
 function rebuild_all_Callback(hObject, eventdata, handles)
     
     if (handles.filefolderchosen == 1)
-        if (handles.filefound == 1)
+        
             
             Sysmessage('Please wait. The graphs are being rebuilt _')
             
@@ -908,13 +832,6 @@ function rebuild_all_Callback(hObject, eventdata, handles)
                 % get all info about i-currentgraph
                 fnct = handles.currentgraphs(i).Script; 
                 ax = handles.currentgraphs(i).Axes;
-                %file = handles.currentgraphs(i).Args.File; %file structure
-                %filename = file{1,2};
-                
-                %handles.currentaxes = ax;
-                
-                
-                %clearbutton_Callback(hObject, eventdata, handles)
                 
                 % get all of values of arguments
                 args = handles.currentgraphs(i).Args;
@@ -929,21 +846,19 @@ function rebuild_all_Callback(hObject, eventdata, handles)
 
                 %runc the chosen_fnct with arguments from the "Scripts" Folder
                 cd('./Scripts')
-                feval(fnct, ax, handles.starttime, handles.stoptime, handles.filename, specific_args)
+                [message, error] = feval(fnct, ax, handles.filefolderpath, handles.date, handles.starttime, handles.stoptime,  specific_args);
                 cd('../') %get back to the main folder
-                %hold (ax, 'on')
+                Sysmessage(message)
 
             end
             
             handles.currentaxes = temp_ax; 
             
-            Sysmessage ('The graphs were successfully rebuilt _')
+            %Sysmessage ('The graphs were successfully rebuilt _')
             
             set(findobj('Tag', 'slider2'), 'Value', 0)
             set(findobj('Tag', 'slider3'), 'Value', 1)
-        else
-            Sysmessage('There are no files of the necessary type for the chosen date _');
-        end    
+
     else
         Sysmessage (handles.Sysmesnofiles)
     end
@@ -997,10 +912,13 @@ function date_editbox_Callback(hObject, eventdata, handles)
     format = '[0-3]\d-(Jan|Feb|Mar|...|Dec)-\d\d\d\d';
     str = get(findobj('Tag', 'date_editbox'), 'String'); %String in date_editbox
     if (~isempty(regexp(str,format, 'once')))
+        handles.date = get(hObject, 'String'); 
         listbox2_Callback(findobj('Tag', 'listbox2'), eventdata, handles);       
     else
         Sysmessage('Error! Date format is dd-Mmm-yyy');
     end
+    
+    guidata(hObject, handles);
     
 end
 
@@ -1010,6 +928,11 @@ function date_editbox_CreateFcn(hObject, eventdata, handles)
     if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
         set(hObject,'BackgroundColor','white');
     end
+    
+    if ~isempty(handles)
+        handles.date = get(hObject, 'String');
+    end 
+    guidata(hObject, handles);
     
 end
 
@@ -1236,12 +1159,16 @@ function Open_Project_Callback(hObject, eventdata, handles)
     switch choice
         case 'Yes'
             Save_Project_Callback(hObject, eventdata, handles)
-            delete(handles.figure1)
-            uiopen(['./Projects','figure'])
+            close(handles.figure1)
+            [FileName,FilePath] = uigetfile('');
+            handles = load([FilePath,FileName(1:end-4),'_handles.mat']);
         case 'No'
-            delete(handles.figure1)
-            uiopen(['./Projects','figure'])
+            close(handles.figure1)
+            [FileName,FilePath] = uigetfile('');
+            handles = load([FilePath,FileName(1:end-4),'_handles.mat']);
     end
+    
+   
     
 end
 
@@ -1252,6 +1179,7 @@ function Save_Project_Callback(hObject, eventdata, handles)
     
     if ~isequal(FileName, 0)
         savefig([FilePath, FileName])   
+        save([FilePath, FileName(1:end-4),'_handles'], 'handles')
     end
     
 end
@@ -1369,7 +1297,7 @@ function SaveData_Callback(hObject, eventdata, handles)
     
     time_str = datestr(x, 'yyyy-mm-dd HH:MM:SS');
     %data(3, :) = str2double(time_str(:, 1:2)); %day
-    assignin('base', 'time', time_str)
+    
 %     for i=1:numel(x)
 %          %data(3, i) = str2double(time_str(i, 1:2)); %day
 %          data(1, i) = str2double(time_str(i, 13:14)); %hour
@@ -1387,9 +1315,7 @@ function SaveData_Callback(hObject, eventdata, handles)
         data_str(i, 1:len) = str;
     end
     
-    assignin('base', 'x', x)
-    assignin('base', 'data_str', data_str)
-    %assignin('base', 'data_str', data_str)
+    
     [FileName, FilePath] = uiputfile({'*.dat';'*.sts';'*.txt';'*.*'}, 'Save as', './Data/Data');
     
     if ~isequal(FileName, 0)
@@ -1405,7 +1331,7 @@ function PlotData_Callback(hObject, eventdata, handles)
     [FileName,PathName] = uigetfile('*.mat','Select the file to be plotted');
     data = open([PathName, FileName]);
     data=data.data;
-    assignin('base', 'data', data)
+    
     plot(handles.currentaxes, data(1, :), data(2, :), 'linewidth', 2)
     grid on
     datetick('x','HH:MM:SS');
