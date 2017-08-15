@@ -1,5 +1,5 @@
 function [Args, dscrp] = Bx_divided_by_B_Args()
-
+    
     field1 = 'File'; %File! not 'file'
     value1 = {{'mag', ''}; {'', '.mat',}; {'', '.sts'}}; %{filetype, path to the file}
     
