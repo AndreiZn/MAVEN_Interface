@@ -1,7 +1,8 @@
-function MagField_B(ax, start_time, stop_time, filename, specific_args)
+function [message, error] = MagField_B (ax, filefolderpath, date, start_time, stop_time, specific_args)
     
-    try
-        mf_filename = filename;
+    [mf_filename, message, error] = get_file(date, filefolderpath);
+    
+    if ~isempty(mf_filename)
 
         fileID=fopen(mf_filename,'r');
         tline = fgetl(fileID);
@@ -41,8 +42,16 @@ function MagField_B(ax, start_time, stop_time, filename, specific_args)
         xlim_min = [datestr(mf_data(averind,7), 'dd-mmm'), '-0000', ' ', start_time]; %04-Jan-0000 18:39:00
         xlim_max = [datestr(mf_data(averind,7), 'dd-mmm'), '-0000', ' ', stop_time]; %04-Jan-0000 18:43:00
         xlim([datenum(xlim_min) datenum(xlim_max)])
-    catch
-        errmsg = lasterr;
-        disp(errmsg)
-        cd ('./')
+
     end    
+    
+function [file, msg, err] = get_file(date, filefolderpath)
+    
+    filetype = 'mag';
+    chosenfunc = 'MagField_B';
+    extensions = {{'', '.mat',}; {'', '.sts'}};
+    
+    cd('../Aux_Fncs')
+    [file, msg, err] = feval('GetFile', chosenfunc, filetype, extensions, date, filefolderpath); 
+    cd('../Scripts')  
+       
