@@ -122,8 +122,8 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.starting_size_of_panel = get(handles.scrolling_panel, 'Position');
     
     % Default ColorOrder and LineStyleOrder of axes
-    handles.default_colororder = get(handles.axes1, 'ColorOrder');
-    handles.default_linestyleorder = get(handles.axes1, 'LineStyleOrder');
+    %handles.default_colororder = get(handles.axes1, 'ColorOrder');
+    %handles.default_linestyleorder = get(handles.axes1, 'LineStyleOrder');
     
     % 0 if AxesDesign menu is not open, 1 when it's open
     handles.AxDesignOpen = 0;
@@ -896,12 +896,25 @@ end
 % --- Executes on button press in save_as_pic_button.
 function save_as_pic_button_Callback(hObject, eventdata, handles)
 
-    %img = feval('screencapture', handles.figure1, [42 -150 1165 882]);
-    img = feval('screencapture', handles.figure1);
-    [FileName, FilePath] = uiputfile({'*.png'}, 'Save as', './ScreenShots/NewShot');  
-    cd('./ScreenShots')
-    imwrite (img, [FilePath, FileName])
-    cd('../')
+%     %img = feval('screencapture', handles.scrolling_panel);
+%     pos_scr = get(handles.scrolling_panel, 'Position');
+%     pos_stc = get(handles.static_panel, 'Position');
+%     pos_fig = get(handles.figure1, 'Position');
+%     assignin('base', 'pos_scr', pos_scr)
+%     assignin('base', 'pos_stc', pos_stc)
+%     assignin('base', 'pos_fig', pos_fig)
+%     img = feval('screencapture', 0, [pos_fig(1)+pos_stc(1)+pos_scr(1) pos_fig(2)+pos_stc(2)+pos_scr(2) pos_scr(3) pos_scr(4)]);
+%     %img = feval('screencapture', handles.figure1);
+%     [FileName, FilePath] = uiputfile({'*.png'}, 'Save as', './ScreenShots/NewShot');  
+%     cd('./ScreenShots')
+%     imwrite (img, [FilePath, FileName])
+%     cd('../')
+    
+    cd('./Aux_Fncs/Export_fig')
+    export_fig (handles.scrolling_panel, 'test.tiff', '-append') 
+    %assignin('base', 'frame', frame)
+    %wait
+    cd('../../')
     
 end
 
