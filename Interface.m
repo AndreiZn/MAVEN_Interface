@@ -1054,6 +1054,36 @@ function [ha] = highest_axes(axs)
     
 end
 
+% Find the highest axes
+function [ha] = lowest_axes(axs)
+    
+    if (~isempty(axs))
+        pos = get (axs{1}, 'Position');
+        min_y = pos(2);
+        ha = axs{1};
+        for ind_ha=2:size(axs, 2)
+            pos = get (axs{ind_ha}, 'Position');
+            if (pos(2)<min_y)
+                min_y = pos(2);
+                ha = axs{ind_ha};
+            end    
+        end
+    else
+        ha = '';
+    end
+    
+end
+
+function lift_axes_up(axs, dlt)
+
+    for ind_lau=1:numel(axs)
+        a = axs{ind_lau};
+        pos = get(a, 'Position');
+        set(a, 'Position', [pos(1) pos(2)+dlt pos(3) pos(4)])
+    end    
+
+end
+
 % --- Executes on button press in NewAxis.
 function NewAxis_Callback(hObject, eventdata, handles)    
     
@@ -1061,16 +1091,16 @@ function NewAxis_Callback(hObject, eventdata, handles)
     panel_pos = get(handles.scrolling_panel, 'Position'); 
     fig_pos = get(handles.static_panel, 'Position');
     
-    % find the highest axes from currently available ones
-    h_ax = highest_axes(handles.axesav);
-    if ~isempty(h_ax)
-        highest_pos = get(h_ax, 'Position'); % its position
+    % find the lowest axes from currently available ones
+    l_ax = lowest_axes(handles.axesav);
+    if ~isempty(l_ax)
+        lowest_pos = get(l_ax, 'Position'); % its position
     else
-        highest_pos = handles.init_ax1_pos;
+        lowest_pos = handles.init_ax1_pos;
     end    
     
     % space for new axes = y-size of the highestaxes + initial distance between axes:
-    delta_y = highest_pos(4)+handles.init_delta_y;
+    delta_y = lowest_pos(4)+handles.init_delta_y;
     
     % initial scrolling panel position
     handles.scrolling_panel_init = get (handles.scrolling_panel, 'Position');
@@ -1078,31 +1108,33 @@ function NewAxis_Callback(hObject, eventdata, handles)
     % Change the size and position of panels with axes
     fig_pos(4) = fig_pos(4) + delta_y;
     fig_pos(2) = fig_pos(2) - delta_y;
-    panel_pos(4) = panel_pos(4) + delta_y;    
+    panel_pos(4) = panel_pos(4) + delta_y;  
+    lift_axes_up(handles.axesav, delta_y);
+    %panel_pos(2) = panel_pos(2) - delta_y; 
     set (handles.static_panel, 'Position', fig_pos)
     set (handles.scrolling_panel, 'Position', panel_pos)
     
-    % again find the highest axes from currently available ones
-    h_ax = highest_axes(handles.axesav);
-    if ~isempty(h_ax)
-        highest_pos = get(h_ax, 'Position'); % its position
+    % again find the lowest axes from currently available ones
+    l_ax = lowest_axes(handles.axesav);
+    if ~isempty(l_ax)
+        lowest_pos = get(l_ax, 'Position'); % its position
     else
-        highest_pos = handles.init_ax1_pos;
+        lowest_pos = handles.init_ax1_pos;
     end    
     
     % add a new axes
     numofax = size(handles.axesav, 2); %number of axes available
     tag = ['axes', num2str(numofax+1)];
-    new_ax_pos = highest_pos; 
-    new_ax_pos(2) = new_ax_pos(2) + delta_y;
+    new_ax_pos = lowest_pos; 
+    new_ax_pos(2) = new_ax_pos(2) - delta_y;
     handles.(tag) = axes(handles.scrolling_panel, 'Units', 'characters', 'ActivePositionProperty', 'position', 'Position', new_ax_pos);
     set (handles.(tag), 'XTick', [], 'Ytick', [])
     
     % add a new axes to axesavailable
     handles.axesav{numofax + 1} = handles.(tag); 
     
-    % Move the slider up
-    set(findobj('Tag', 'panel_slider'), 'Value', 1)
+    % Move the slider down
+    set(findobj('Tag', 'panel_slider'), 'Value', 0)
     panel_slider_Callback(findobj('Tag', 'panel_slider'), eventdata, handles)
     
     SetAllButtonDownFcn(hObject, handles); % So that axes can be moved
