@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 19-Jul-2017 16:21:43
+    % Last Modified by GUIDE v2.5 30-Aug-2017 18:02:49
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -896,24 +896,11 @@ end
 % --- Executes on button press in save_as_pic_button.
 function save_as_pic_button_Callback(hObject, eventdata, handles)
 
-%     %img = feval('screencapture', handles.scrolling_panel);
-%     pos_scr = get(handles.scrolling_panel, 'Position');
-%     pos_stc = get(handles.static_panel, 'Position');
-%     pos_fig = get(handles.figure1, 'Position');
-%     assignin('base', 'pos_scr', pos_scr)
-%     assignin('base', 'pos_stc', pos_stc)
-%     assignin('base', 'pos_fig', pos_fig)
-%     img = feval('screencapture', 0, [pos_fig(1)+pos_stc(1)+pos_scr(1) pos_fig(2)+pos_stc(2)+pos_scr(2) pos_scr(3) pos_scr(4)]);
-%     %img = feval('screencapture', handles.figure1);
-%     [FileName, FilePath] = uiputfile({'*.png'}, 'Save as', './ScreenShots/NewShot');  
-%     cd('./ScreenShots')
-%     imwrite (img, [FilePath, FileName])
-%     cd('../')
-    
+    [FileName, FilePath] = uiputfile({'*.png'}, 'Save as', './ScreenShots/NewShot');  
+ 
     cd('./Aux_Fncs/Export_fig')
-    export_fig (handles.scrolling_panel, 'test.tiff', '-append') 
-    %assignin('base', 'frame', frame)
-    %wait
+    export_fig (handles.scrolling_panel, [FilePath, FileName]) 
+    % ignore mistakes
     cd('../../')
     
 end
@@ -1085,57 +1072,123 @@ function lift_axes_up(axs, dlt)
 end
 
 % --- Executes on button press in NewAxis.
-function NewAxis_Callback(hObject, eventdata, handles)    
-    
-    % There are two panels. One is moving and the other is a static background
-    panel_pos = get(handles.scrolling_panel, 'Position'); 
-    fig_pos = get(handles.static_panel, 'Position');
-    
-    % find the lowest axes from currently available ones
-    l_ax = lowest_axes(handles.axesav);
-    if ~isempty(l_ax)
-        lowest_pos = get(l_ax, 'Position'); % its position
+function NewAxis_Callback(hObject, eventdata, handles)   
+
+    if get(findobj('Tag', 'squeeze_checkbox'), 'Value') == 0  %add a new axis without squeezing axes 
+        
+        % There are two panels. One is moving and the other is a static background
+        panel_pos = get(handles.scrolling_panel, 'Position'); 
+        fig_pos = get(handles.static_panel, 'Position');
+
+        % find the lowest axes from currently available ones
+        l_ax = lowest_axes(handles.axesav);
+        if ~isempty(l_ax)
+            lowest_pos = get(l_ax, 'Position'); % its position
+        else
+            lowest_pos = handles.init_ax1_pos;
+        end    
+
+        % space for new axes = y-size of the highestaxes + initial distance between axes:
+        delta_y = lowest_pos(4)+handles.init_delta_y;
+
+        % initial scrolling panel position
+        handles.scrolling_panel_init = get (handles.scrolling_panel, 'Position');
+
+        % Change the size and position of panels with axes
+        fig_pos(4) = fig_pos(4) + delta_y;
+        fig_pos(2) = fig_pos(2) - delta_y;
+        panel_pos(4) = panel_pos(4) + delta_y;  
+        lift_axes_up(handles.axesav, delta_y);
+        %panel_pos(2) = panel_pos(2) - delta_y; 
+        set (handles.static_panel, 'Position', fig_pos)
+        set (handles.scrolling_panel, 'Position', panel_pos)
+
+        % again find the lowest axes from currently available ones
+        l_ax = lowest_axes(handles.axesav);
+        if ~isempty(l_ax)
+            lowest_pos = get(l_ax, 'Position'); % its position
+        else
+            lowest_pos = handles.init_ax1_pos;
+        end    
+
+        % add a new axes
+        numofax = size(handles.axesav, 2); %number of axes available
+        tag = ['axes', num2str(numofax+1)];
+        new_ax_pos = lowest_pos; 
+        new_ax_pos(2) = new_ax_pos(2) - delta_y;
+        handles.(tag) = axes(handles.scrolling_panel, 'Units', 'characters', 'ActivePositionProperty', 'position', 'Position', new_ax_pos);
+        set (handles.(tag), 'XTick', [], 'Ytick', [])
+
+        % add a new axes to axesavailable
+        handles.axesav{numofax + 1} = handles.(tag); 
+
+        % Move the slider down
+        set(findobj('Tag', 'panel_slider'), 'Value', 0)
+        panel_slider_Callback(findobj('Tag', 'panel_slider'), eventdata, handles)
+        
     else
-        lowest_pos = handles.init_ax1_pos;
+        % adding a new axis
+        l_ax = lowest_axes(handles.axesav);
+        if ~isempty(l_ax)
+            lowest_pos = get(l_ax, 'Position'); % its position
+        else
+            lowest_pos = handles.init_ax1_pos;
+        end 
+        
+        delta_y = lowest_pos(4)+handles.init_delta_y;
+        
+        numofax = numel(handles.axesav);
+        tag = ['axes', num2str(numofax+1)];
+        new_ax_pos = lowest_pos; 
+        new_ax_pos(2) = new_ax_pos(2) - delta_y;
+        handles.(tag) = axes(handles.scrolling_panel, 'Units', 'characters', 'ActivePositionProperty', 'position', 'Position', new_ax_pos);
+        set (handles.(tag), 'XTick', [], 'Ytick', [])
+        
+        % add a new axis to axesavailable
+        handles.axesav{numofax + 1} = handles.(tag); 
+        
+        % squeezing
+        h_ax = highest_axes(handles.axesav);
+        if ~isempty(h_ax)
+            highest_pos = get(h_ax, 'Position'); % its position
+        else
+            highest_pos = handles.init_ax1_pos;
+        end 
+        
+        l_ax = lowest_axes(handles.axesav);
+        if ~isempty(l_ax)
+            lowest_pos = get(l_ax, 'Position'); % its position
+        else
+            lowest_pos = handles.init_ax1_pos;
+        end 
+        
+        panel_pos = get(handles.scrolling_panel, 'Position');
+        plotting_space_pos = panel_pos(2) + panel_pos(4) - lowest_pos(2);
+        
+        if plotting_space_pos > panel_pos(4)
+            %k = plotting_space_pos/panel_pos(4);
+            k = (numofax+1)/numofax; %coefficient by which axes width is changed
+        else
+            k = 1;
+        end    
+        % all axes and the distance between them should be squeezed         
+        %k = (numofax+1)/numofax; %coefficient by which axes width is changed
+        %k_2 = (numofax+2)/(numofax+1);
+        
+        %init_pos = handles.init_ax1_pos; % initial position of the first axis
+        
+        for ind = 1:numofax+1
+            a = handles.axesav{ind};
+            a_pos = get(a, 'Position');
+            dif = a_pos(4) - a_pos(4)/k; % difference in width
+            dif_delta_y = handles.init_delta_y - handles.init_delta_y/k; % delta_y should be changed as well
+            set(a, 'Position', [a_pos(1) a_pos(2)+dif*ind+dif_delta_y*(ind-1) a_pos(3) a_pos(4)/k])
+            
+        end
+        
+
+        %set(l_ax, 'Position', [lowest_pos(1) lowest_pos(2) lowest_pos(3) lowest_pos(4)/2]) 
     end    
-    
-    % space for new axes = y-size of the highestaxes + initial distance between axes:
-    delta_y = lowest_pos(4)+handles.init_delta_y;
-    
-    % initial scrolling panel position
-    handles.scrolling_panel_init = get (handles.scrolling_panel, 'Position');
-    
-    % Change the size and position of panels with axes
-    fig_pos(4) = fig_pos(4) + delta_y;
-    fig_pos(2) = fig_pos(2) - delta_y;
-    panel_pos(4) = panel_pos(4) + delta_y;  
-    lift_axes_up(handles.axesav, delta_y);
-    %panel_pos(2) = panel_pos(2) - delta_y; 
-    set (handles.static_panel, 'Position', fig_pos)
-    set (handles.scrolling_panel, 'Position', panel_pos)
-    
-    % again find the lowest axes from currently available ones
-    l_ax = lowest_axes(handles.axesav);
-    if ~isempty(l_ax)
-        lowest_pos = get(l_ax, 'Position'); % its position
-    else
-        lowest_pos = handles.init_ax1_pos;
-    end    
-    
-    % add a new axes
-    numofax = size(handles.axesav, 2); %number of axes available
-    tag = ['axes', num2str(numofax+1)];
-    new_ax_pos = lowest_pos; 
-    new_ax_pos(2) = new_ax_pos(2) - delta_y;
-    handles.(tag) = axes(handles.scrolling_panel, 'Units', 'characters', 'ActivePositionProperty', 'position', 'Position', new_ax_pos);
-    set (handles.(tag), 'XTick', [], 'Ytick', [])
-    
-    % add a new axes to axesavailable
-    handles.axesav{numofax + 1} = handles.(tag); 
-    
-    % Move the slider down
-    set(findobj('Tag', 'panel_slider'), 'Value', 0)
-    panel_slider_Callback(findobj('Tag', 'panel_slider'), eventdata, handles)
     
     SetAllButtonDownFcn(hObject, handles); % So that axes can be moved
     
@@ -1397,5 +1450,20 @@ end
 
 % --------------------------------------------------------------------
 function Toggle_Xlabel_OnCallback(hObject, eventdata, handles)
+
+end
+
+
+% --- Executes on button press in squeeze_checkbox.
+function squeeze_checkbox_Callback(hObject, eventdata, handles)
+
+end
+
+
+% --------------------------------------------------------------------
+function Root_Folder_Callback(hObject, eventdata, handles)
+    
+    handles.filefolderpath = uigetdir('', 'Choose a folder with files');
+    guidata(hObject, handles);
 
 end
