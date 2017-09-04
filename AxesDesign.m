@@ -22,7 +22,7 @@ function varargout = AxesDesign(varargin)
 
     % Edit the above text to modify the response to help AxesDesign
 
-    % Last Modified by GUIDE v2.5 27-Jul-2017 15:49:42
+    % Last Modified by GUIDE v2.5 30-Aug-2017 18:12:21
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -60,8 +60,10 @@ function AxesDesign_OpeningFcn(hObject, eventdata, handles, varargin)
     ylabel_CreateFcn(findobj('Tag', 'ylabel'), eventdata, handles);    
     y_min_CreateFcn(findobj('Tag', 'y_min'), eventdata, handles);
     y_max_CreateFcn(findobj('Tag', 'y_max'), eventdata, handles);
-    logscale_checkbox_CreateFcn(findobj('Tag', 'logcale_checkbox'), eventdata, handles)
-    Legend_CreateFcn(findobj('Tag', 'Legend'), eventdata, handles)
+    Line_w_CreateFcn(findobj('Tag', 'Line_w'), eventdata, handles);
+    Font_CreateFcn(findobj('Tag', 'Font'), eventdata, handles);
+    logscale_checkbox_CreateFcn(findobj('Tag', 'logcale_checkbox'), eventdata, handles);
+    Legend_CreateFcn(findobj('Tag', 'Legend'), eventdata, handles);
     colormap_min_CreateFcn(findobj('Tag', 'colormap_min'), eventdata, handles);
     colormap_max_CreateFcn(findobj('Tag', 'colormap_max'), eventdata, handles);
     % UIWAIT makes AxesDesign wait for user response (see UIRESUME)
@@ -144,6 +146,35 @@ function y_max_CreateFcn(hObject, eventdata, handles)
         ylim = get(handles.Interface_handles.currentaxes, 'ylim');
         set(hObject, 'String', ylim(2))
     end
+    
+
+function Font_Callback(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function Font_CreateFcn(hObject, eventdata, handles)
+
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+    if ~isempty (handles)
+        font = get(handles.Interface_handles.currentaxes, 'FontSize');
+        set(hObject, 'String', num2str(font))
+    end  
+
+function Line_w_Callback(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function Line_w_CreateFcn(hObject, eventdata, handles)
+
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+    if ~isempty (handles)
+        line = get(handles.Interface_handles.currentaxes, 'Children');
+        line_w = get(line, 'LineWidth');
+        set(hObject, 'String', num2str(line_w))
+    end    
+    
     
 % --- Executes during object creation, after setting all properties.
 function logscale_checkbox_CreateFcn(hObject, eventdata, handles)
@@ -228,10 +259,13 @@ function SetButton_Callback(hObject, eventdata, handles)
     ylab = get(handles.ylabel, 'String');
     ylim1 = str2double(get(handles.y_min, 'String'));
     ylim2 = str2double(get(handles.y_max, 'String'));
+    font = str2double(get(handles.Font, 'String'));
+    line_w = str2double(get(handles.Line_w, 'String'));
+    
     if get(findobj('Tag', 'legend_checkbox'), 'Value') == 1
         leg_str = get(findobj('Tag', 'Legend'), 'String');
         leg_cell = strsplit(leg_str,',');
-        legend(handles.Interface_handles.currentaxes, 'String', leg_cell)
+        legend(cur_ax, 'String', leg_cell)
     end
     
     xlabel(xlab)
@@ -239,6 +273,10 @@ function SetButton_Callback(hObject, eventdata, handles)
 
     ylabel(ylab)
     ylim([ylim1 ylim2])
+       
+    set(cur_ax, 'FontSize', font)
+    line = get(cur_ax, 'Children');
+    set(line, 'LineWidth', line_w)
     
     
 % --- Executes on button press in PrpInspector.
