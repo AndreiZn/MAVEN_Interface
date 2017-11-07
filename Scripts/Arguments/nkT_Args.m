@@ -1,4 +1,4 @@
-function [Args, dscrp] = Temperature_Time_Args()
+function [Args, dscrp] = nkT_Args()
     
     field1 = 'Mass';
     value1 = {{'H+', 1}; {'He+', 4}; {'C+', 12}; {'O+', 16}; {'O2+', 32}; {'CO2+', 44}};
