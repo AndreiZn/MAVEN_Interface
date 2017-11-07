@@ -17,7 +17,7 @@ function [message, error] = MagField_B_y (ax, filefolderpath, date, start_time, 
         mf_data = dlmread(mf_filename, '', headersNumber);
 
         averind = round(size(mf_data, 1)/2); 
-        day = [datestr(mf_data(averind,7), 'dd-mmm'), '-', num2str(mf_data(averind, 1))]; 
+        day = datestr(mf_data(averind,7) + datenum(['00-Jan-', num2str(mf_data(1, 1)), ' 00:00:00']), 'dd-mmm-yyyy');
         timefrom = datenum([day, ' ', start_time]);
         timeto = datenum([day, ' ', stop_time]);
 

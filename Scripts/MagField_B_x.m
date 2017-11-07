@@ -15,21 +15,31 @@ function [message, error] = MagField_B_x (ax, filefolderpath, date, start_time, 
         tline = fgetl(fileID);
         fclose(fileID);
         mf_data = dlmread(mf_filename, '', headersNumber);
-
+        assignin('base', 'mf_data', mf_data)
         averind = round(size(mf_data, 1)/2); 
-        day = [datestr(mf_data(averind,7), 'dd-mmm'), '-', num2str(mf_data(averind, 1))]; 
+        %day = [datestr(mf_data(averind,7), 'dd-mmm'), '-', num2str(mf_data(averind, 1))]; 
+        day = datestr(mf_data(averind,7) + datenum(['00-Jan-', num2str(mf_data(1, 1)), ' 00:00:00']), 'dd-mmm-yyyy');
+        assignin('base', 'day', day)
         timefrom = datenum([day, ' ', start_time]);
         timeto = datenum([day, ' ', stop_time]);
-
+        
+        assignin('base', 'averind', averind)
+        
+        assignin('base', 'timefrom', timefrom)
+        
         mf_epoch = mf_data(:, 7) + datenum(['00-Jan-', num2str(mf_data(1, 1)), ' 00:00:00']);
         choose_ind = find(mf_epoch>=timefrom & mf_epoch<=timeto);
+        assignin('base', 'mf_epoch', mf_epoch)
+        assignin('base', 'choose_ind', choose_ind)
         mf_epoch = mf_epoch(choose_ind);
         mf_data2 = mf_data(choose_ind, :);
 
         Bx = mf_data2(:, 8);
 
         axes (ax); 
-
+        assignin('base', 'Bx', Bx)
+        assignin('base', 'mf_d2', mf_data2)
+        
         plot(mf_data2(:,7), Bx, 'linewidth', 0.5)
 
         datetick('x','HH:MM:SS');
