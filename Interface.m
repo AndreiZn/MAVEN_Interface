@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 30-Aug-2017 18:02:49
+    % Last Modified by GUIDE v2.5 30-Aug-2017 16:36:14
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -626,8 +626,9 @@ function listbox2_Callback(hObject, eventdata, handles)
                           'HorizontalAlignment', 'left', 'String', '');
                 
                 %it's necessary to save all objects created to delete them later. 
-                %This information is saved in handles.argobj      
-                handles.argobj = [handles.argobj, handles.edbox];  
+                %This information is saved in handles.argobj   
+                handles.temphndl = [handles.argpanel(i), handles.lst_with_args(i)];
+                handles.argobj = [handles.argobj, handles.temphndl, handles.edbox];  
             end  % end of: if strcmp(dscrp_i, 'editbox')             
         end % for loop (fieldnms)
     else   
@@ -1456,14 +1457,5 @@ end
 
 % --- Executes on button press in squeeze_checkbox.
 function squeeze_checkbox_Callback(hObject, eventdata, handles)
-
-end
-
-
-% --------------------------------------------------------------------
-function Root_Folder_Callback(hObject, eventdata, handles)
-    
-    handles.filefolderpath = uigetdir('', 'Choose a folder with files');
-    guidata(hObject, handles);
 
 end
