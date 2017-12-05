@@ -89,7 +89,7 @@ function [message, error] = new_MagField_fft_spec (ax, filefolderpath, date, sta
 function [file, msg, err] = get_file(date, filefolderpath)
     
     filetype = 'mag';
-    chosenfunc = 'MagField_B';
+    chosenfunc = 'new_MagField_fft_spec';
     extensions = {{'', '.mat',}; {'', '.sts'}};
     
     cd('../Aux_Fncs')
