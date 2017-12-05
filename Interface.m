@@ -22,7 +22,7 @@ function varargout = Interface(varargin)
 
     % Edit the above text to modify the response to help Interface
 
-    % Last Modified by GUIDE v2.5 30-Aug-2017 16:36:14
+    % Last Modified by GUIDE v2.5 07-Nov-2017 16:48:37
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -152,11 +152,13 @@ function Interface_OpeningFcn(hObject, eventdata, handles, varargin)
     
     %Opening a folder with all files. If you don't add guidata here,
     %Interface will display an error when moving a mouse.
-    handles.filefolderpath = uigetdir('', 'Choose a folder with files');
-
-    if (~isequal(handles.filefolderpath, 0))
+    handles.filefolderpath = cellstr(''); %array of file paths
+    dir = uigetdir('', 'Choose a folder with files');
+    
+    if (~isequal(dir, 0))
+        handles.filefolderpath{1} = dir;
         handles.filefolderchosen = 1;
-        Sysmessage(['The folder "', handles.filefolderpath, '" was chosen'])
+        Sysmessage(['The folder "', handles.filefolderpath{1}, '" was chosen'])
     else
         handles.filefolderchosen = 0;
     end    
@@ -1458,4 +1460,22 @@ end
 % --- Executes on button press in squeeze_checkbox.
 function squeeze_checkbox_Callback(hObject, eventdata, handles)
 
+end
+
+
+% --------------------------------------------------------------------
+function Root_Folder_Callback(hObject, eventdata, handles)
+    
+    dir = uigetdir('', 'Choose a folder with files');
+    if (~isequal(handles.filefolderpath, {''}))
+        s = numel(handles.filefolderpath);
+    else
+        s = 0;
+    end
+    
+    handles.filefolderpath{s+1} = dir;
+    Sysmessage(['The folder "', handles.filefolderpath{s+1}, '" was chosen'])
+    handles.filefolderchosen = 1;
+    guidata(hObject, handles);
+    
 end
