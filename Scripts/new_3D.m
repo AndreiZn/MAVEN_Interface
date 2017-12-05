@@ -187,7 +187,7 @@ function [message, error] = new_3D(ax, filefolderpath, date, start_time, stop_ti
                     c = c+1;
                 end
                 %text(-222.567, 3.085, ['Energy=', num2str(round(energy(enum, swp_ind(timenum+tft(1)-1)+1, 1, mass_num))), 'eV/','Mass=', num2str(round(mass_arr (enum, swp_ind(tft(1))+1, 1, mass_num))), 'a.u.'], 'FontWeight', 'bold', 'FontSize', 8.5)
-                text(-98    , 3, ['Energy=', num2str(round(energy(enum, swp_ind(timenum+tft(1)-1)+1, 1, mass_num))), 'eV/','Mass=', num2str(mass), 'a.u.'], 'FontWeight', 'bold', 'FontSize', 8.5)
+                text(-98, 3, ['Energy=', num2str(round(energy(enum, swp_ind(timenum+tft(1)-1)+1, 1, mass_num))), 'eV/','Mass=', num2str(mass), 'a.u.'], 'FontWeight', 'bold', 'FontSize', 8.5)
             end
 
             bar_handle = colorbar;
