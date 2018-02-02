@@ -52,34 +52,16 @@ function [message, error] = MagField_B (ax, filefolderpath, date, start_time, st
         
     elseif strcmp(file_type, 'sql')
         
-        conn = database.ODBCConnection('NASHE-VSIO','','');
-        time_year = date(8:11);
-        timefrom = datenum([date, ' ', start_time]);
-        timeto = datenum([date, ' ', stop_time]);
-        ddayfrom = num2str(timefrom - datenum(['00-Jan-', time_year, ' 00:00:00']));
-        ddayto = num2str(timeto - datenum(['00-Jan-', time_year, ' 00:00:00']));
-        sqlGetData = strcat(['SELECT OB_B_X, OB_B_Y, OB_B_Z, DDAY FROM maven.mag where TIME_YEAR=', time_year,' and DDAY>=', ddayfrom,' and DDAY<=', ddayto]);
-        curs = exec(conn,sqlGetData); %curs = exec(conn,'SELECT * from maven.key_parameters');
-        curs = fetch(curs);
-        table = curs.Data;
-        close (curs);
+        cd('../Aux_Fncs')
+        vars = feval('read_from_sql', '', '', 'maven.mag', {'OB_B_X'; 'OB_B_Y'; 'OB_B_Z'}, date, start_time, stop_time);
+        cd('../Scripts')
         
-        Bx = [table{:,1}]; By = [table{:,2}]; Bz = [table{:,3}];
-        B = sqrt(Bx.^2 + By.^2 + Bz.^2);
-        dday = [table{:,4}];
+        vars = cell2mat(vars); % from cell to double
+        data_to_plot = [sqrt(vars(:,1).^2 + vars(:,2).^2 + vars(:,3).^2), vars(:,4)]; % get two column data to plot
         
-        axes(ax); 
-
-        plot(dday, B, 'linewidth', 0.5)
-
-        datetick('x','HH:MM:SS');
-        ylabel('B, nT')
-        grid on
-        set (ax, 'fontsize', 8);
-        
-        xlim_min = datenum([date(1:7), '0000', ' ', start_time]);
-        xlim_max = datenum([date(1:7), '0000', ' ', stop_time]);
-        xlim([xlim_min, xlim_max])
+        cd('../Aux_Fncs')
+        feval('plot_from_sql', ax, data_to_plot, 'B, nT', date, start_time, stop_time);
+        cd('../Scripts')
         
         message = '';%['"', files_final, '"', ' was successfully uploaded and the system is ready to plot ', chosenfunc];
         error = '0_no_error';
