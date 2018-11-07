@@ -53,7 +53,8 @@ function [message, error] = MagField_B (ax, filefolderpath, date, start_time, st
     elseif strcmp(file_type, 'sql')
         
         cd('../Aux_Fncs')
-        vars = feval('read_from_sql', '', '', 'maven.mag', {'OB_B_X'; 'OB_B_Y'; 'OB_B_Z'}, date, start_time, stop_time);
+        %vars = feval('read_from_sql', '', '', 'maven.mag', {'OB_B_X'; 'OB_B_Y'; 'OB_B_Z'}, date, start_time, stop_time);
+        vars = feval('select_from_sql', '', '', 'maven.mag', {'OB_B_X'; 'OB_B_Y'; 'OB_B_Z'}, date, start_time, stop_time);
         cd('../Scripts')
         
         vars = cell2mat(vars); % from cell to double
